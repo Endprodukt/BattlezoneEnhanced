@@ -586,3 +586,5 @@ weiter gleich.
 - Das Menü geht nur über feste Eingaben (`bz_nav` über `src/platform/vpbind.[ch]`, Kopie aus dem Tempest-2000-Port): Pfeile, jeder Stick/Hat/Steuerhorn, START/Enter/Keypad-Enter. Belegungen und die Fahrweisen wirken im Menü nicht mehr.
 - AUTO direkt gelesen (`AUTO_SPEC` in controls.c: Pfeile/erster Stick, E/D/I/K für die Hebel, Left Ctrl + Stick-Knopf 1 + linke Maustaste fürs Feuer, 1, 5); Steuerhorn-AUTO: das Gerät mit "yoke" im Namen, sonst Joystick 1, direkt mit Totzone. Neu: Maustasten als Belegung. Beim Belegen nie: Tab, F2, Esc, Enter, Keypad-Enter, Entf; bei Spielfunktionen auch START/COIN.
 - Am PC geprüft (ersetzen, hinzufügen, NONE), Pi-Build am Automaten installiert (alte Datei `battlezone.before-vpbind`), dort nicht ausprobiert.
+
+GitHub-Release (2026-10-19): `v0.1.21` mit demselben Paket wie im Google-Drive-Ordner `games`. Bei jedem neuen Paket im Drive auch ein Release anlegen (`gh release create v<version> <paket>.vpk`).
