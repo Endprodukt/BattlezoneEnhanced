@@ -1,0 +1,9 @@
+build/
+_scratch/
+roms/
+save/
+*.bzcap
+# fetched, not part of this project: see BUILD.md
+upstream/
+external/VectorPie/
+__pycache__/

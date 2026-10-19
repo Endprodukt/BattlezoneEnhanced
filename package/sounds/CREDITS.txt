@@ -1,0 +1,33 @@
+Battlezone Enhanced - where the sounds come from
+
+Made by tools/mkfreesound.py, each layered from these recordings.
+
+From freesound.org, all CC0 (public domain, no attribution needed;
+named here anyway):
+
+  Explosions (EXPLO_SOFT, EXPLO_LOUD)
+    394128  Space Explosion.wav            morganpurkis
+    490266  Sci-Fi_Explosion_2.wav         Anomaex
+    413224  Energy impact 4                ihitokage
+    814052  Retro Bit Explosion            qubodup
+    873747  Low_Mid_End_Void_Energy_Blast_Punch_01   The_Elementus
+
+  Tank engines (ENGINE_IDLE, ENGINE_REV, ENEMY_ENGINE)
+    182793  Military Vehicle Humming       qubodup
+    186934  engine4_loop.wav               ReadeOnly
+    329800  t26_moving_01.wav              greatmganga
+    849062  tracks moving                  christerljung
+    121531  tracked vehicle.wav            cognito perceptu
+    572294  tank_engine.wav                monosfera
+    187676  Driving Tank Engine            qubodup
+
+  Running into an obstacle (BOING, BLKSND)
+    151624  Clank Car Crash Collision      qubodup
+    67617   Metal Crash Collision          qubodup
+    837389  Heavy Robot Footsteps          Artem_Zaitsev
+    336001  Metal Grinding Very Slow       Ev-Dawg
+    697758  Metal Resonant Scrape Impact   SoundDesignForYou
+
+The shot (SHELL_LOUD, and SHELL_SOFT made from it) is player_fire.wav
+of Battle Zone II as it is on the owner's cabinet; its license is not
+known.
