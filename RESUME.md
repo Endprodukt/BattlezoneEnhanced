@@ -1,309 +1,331 @@
-# Weiterarbeiten
+# Carrying on
 
-Stand und offene Punkte stehen in [STATUS.md](STATUS.md), Bauen und Prüfen in
-[BUILD.md](BUILD.md). Hier steht, was man wissen muss, um im Code
-weiterzumachen.
+The state and what is open are in [STATUS.md](STATUS.md), building and
+checking in [BUILD.md](BUILD.md). This is what you need to know to carry on
+with the code.
 
-## Aufbau
+## Layout
 
 ```
-upstream/                Originalquelltext (historicalsource/battlezone), nur lesen
-external/VectorPie/      das SDK, unverändert
-src/core/machine.[ch]    die Platine: Speicher 0000-7FFF, Schalter, POKEY-Register, Sound-Latch
-src/core/bz_symbols.h    alle Adressen unter den Originalnamen (erzeugt: tools/mksyms.py)
-src/core/emu.[ch]        das Originalprogramm auf dem 6502-Kern (Referenz)
-src/cpu/m6502.[ch]       der 6502-Kern
-src/mbox/                Math Box
-src/avg/                 Vektorgenerator: Displayliste -> Linien, mit dem Fenster
-src/game/m6502.h         die Makros, mit denen die C-Routinen geschrieben sind
-src/game/mainline.c      MAIN, WNSHLD, BATTLE, Highscore-Seiten, MSGS, INFO
-src/game/view.c          MOUNTS, VOLCNO, ROTATE, ROTPNT, EXPLDE, DRAW, PNTPUT, Sinus
-src/game/play.c          Schüsse, Kollisionen, MOTION, ROBOT, BUZBOM, SAUCMV, TRACK, DRADAR
-src/game/nmi.c           der Interrupt und PWRON
-src/game/vgut.c          VGUT (Displayliste schreiben) und DIGITS
+upstream/                the original source (historicalsource/battlezone), read only
+external/VectorPie/      the SDK (0.9.0 or later), unchanged
+src/core/machine.[ch]    the board: memory 0000-7FFF, switches, POKEY registers, sound latch
+src/core/bz_symbols.h    every address under its original name (generated: tools/mksyms.py)
+src/core/emu.[ch]        the original program on the 6502 core (the reference)
+src/cpu/m6502.[ch]       the 6502 core
+src/mbox/                the math box
+src/avg/                 the vector generator: display list -> lines, with the window
+src/game/m6502.h         the macros the C routines are written in
+src/game/mainline.c      MAIN, WNSHLD, BATTLE, the high score pages, MSGS, INFO
+src/game/view.c          MOUNTS, VOLCNO, ROTATE, ROTPNT, EXPLDE, DRAW, PNTPUT, sine
+src/game/play.c          shells, collisions, MOTION, ROBOT, BUZBOM, SAUCMV, TRACK, DRADAR
+src/game/nmi.c           the interrupt and PWRON
+src/game/vgut.c          VGUT (writing the display list) and DIGITS
 src/game/sound.c         BZSOUN (SNDON, MODSND)
 src/game/coin.c          MOOLAH
-src/sound/               POKEY und die diskreten Sounds
-src/core/tags.h          was eine Linie ist: die Notizen der Zeichenroutinen (vgtag)
-src/render/smooth.[ch]   Bilder zwischen den Frames
-src/render/color.[ch]    die Farbe jeder Linie
-src/render/solid.[ch]    Verdeckung: Flächen der Objekte, Linien dahinter abschneiden
-src/render/ground.[ch]   Bodengitter
-src/render/hiscore.[ch]  Highscore-Tabelle laden und speichern
-src/sound/samples.[ch]   Sound-Ersatz durch WAV-Dateien
-assets/freesound/        die Freesound-Aufnahmen (CC0), aus denen package/sounds gemischt ist
-assets/bzoneii/          Sounds von Battle Zone II vom Automaten (der Schuss), nur für den eigenen
-src/render/enhance.[ch]  Enhanced-Optionen im Bild: Sterne, Spuren, Staub, Blitz, Glühen, Dunst, Radar, Pfeil, Hebel
-src/game/pace.[ch]       Tempo des Automaten (enh_tempo)
-src/render/config.[ch], draw.[ch]   Einstellungen, Zeichnen über das SDK
-src/platform/controls.[ch]   Belegungen, die drei Arten zu fahren
-src/platform/menu.[ch]   das Testmenü (Tab)
-src/platform/app, audio, src/main.c   Fenster, Ton, Programmschleife
-src/capture/             das Format der MAME-Aufnahmen
-tools/                   bzcompare, bznmi, bzshot, Aufnahme- und Prüfskripte, Disassembler
+src/game/pace.[ch]       the cabinet's pace (enh_tempo)
+src/sound/               the POKEY and the discrete sounds
+src/sound/samples.[ch]   sounds replaced by WAV files
+src/core/tags.h          what a line is: the drawing routines' notes (vgtag)
+src/render/smooth.[ch]   pictures between the frames
+src/render/color.[ch]    every line's color
+src/render/solid.[ch]    occlusion: the objects' faces, lines behind them cut away
+src/render/ground.[ch]   the ground grid
+src/render/hiscore.[ch]  the high score table, loaded and saved (and as text for the menu)
+src/render/enhance.[ch]  the enhanced options in the picture: stars, far mountains, sparks, dust, flash, volcano, levers
+src/render/config.[ch], draw.[ch]   settings, drawing through the SDK
+src/platform/controls.[ch]   bindings, the three ways to drive
+src/platform/menu.[ch]   the test menu (Tab)
+src/platform/app, audio, src/main.c   window, sound (the SDK's stream), the program loop
+src/capture/             the format of the MAME captures
+assets/freesound/        the Freesound recordings (CC0) package/sounds is mixed from
+assets/bzoneii/          sounds of Battle Zone II from the cabinet (the shot; license not known)
+tools/                   bzcompare, bznmi, bzshot, capture and check scripts, disassembler, mkfreesound.py, make_vpk.sh, deploy.sh
 ```
 
-## Wie die C-Routinen geschrieben sind
+## How the C routines are written
 
-Jede Routine des Originals ist eine C-Funktion mit dem Originalnamen
-(`bz_rotate` ist `ROTATE`). Die Register des 6502 stehen in der Maschine
-(`m->r`), jeder Befehl ist ein Makro aus `src/game/m6502.h`:
+Every routine of the original is a C function with the original's name
+(`bz_rotate` is `ROTATE`). The 6502's registers are in the machine
+(`m->r`); every instruction is a macro from `src/game/m6502.h`:
 
 ```c
 LDA(RD(BZ_TANGLE));  SEC();  SBC(RD(BZ_RGOAL));  if (BPL) goto l3;
 ```
 
-Das ist Absicht und kein Zwischenstand, den man glätten sollte. Das
-Original reicht Werte in A, X, Y und dem Carry zwischen Routinen weiter,
-prüft Flags, die eine Routine viel früher gesetzt hat, addiert ohne `CLC`
-mit dem Carry von irgendwo, und hinterlässt Reste in Hilfszellen, die ein
-späterer Frame liest. Nur so stimmt jedes Byte mit MAME überein.
+This is on purpose, not a stage to be smoothed out. The original passes
+values in A, X, Y and the carry between routines, tests flags a routine
+set long before, adds without `CLC` with a carry from somewhere, and
+leaves remains in scratch cells that a later frame reads. Only so does
+every byte agree with MAME.
 
-Regeln:
+Rules:
 
-* Sprungmarken heißen wie die lokalen Marken des Originals (`10$` wird
-  `l10`). Kommentare in Großbuchstaben sind die des Originals.
-* Jeder Speicherzugriff geht über `RD`/`WR`, auch auf Page 0. Der
-  Vergleich hängt sich dort ein.
-* `PHA`/`PLA` sind eine lokale Variable, `PHP`/`PLP` sind `FLAGS`/`RESTORE`.
-* Berechnete Sprünge (`PHA PHA RTS` über eine Tabelle) sind ein `switch`.
-* Zahlen im Quelltext sind hexadezimal (`.RADIX 16`), dezimale haben einen
-  Punkt (`22.`). Im Zweifel im Disassembly nachsehen (`tools/dis6502.py`).
-  `16*2` in WNSHLD ist 2C.
-* Index 0 ist der Spieler, Index 2 der Gegner: `TPOSX+2`, `FIRECT+2`,
-  `COLFLG+2`, `HITS+2`. Die Zellen dazwischen gehören anderen Variablen
-  (`COLFLG+2` ist `SAVE1+1`).
-* `ATRACT` ist FF, während gespielt wird, und 0 im Attract-Modus.
+* Labels are named as the original's local labels (`10$` becomes `l10`).
+  Comments in capitals are the original's.
+* Every memory access goes through `RD`/`WR`, page 0 too. The comparison
+  hooks in there.
+* `PHA`/`PLA` are a local variable, `PHP`/`PLP` are `FLAGS`/`RESTORE`.
+* Computed jumps (`PHA PHA RTS` through a table) are a `switch`.
+* Numbers in the source are hexadecimal (`.RADIX 16`); decimal ones have
+  a dot (`22.`). When in doubt, look in the disassembly
+  (`tools/dis6502.py`). `16*2` in WNSHLD is 2C.
+* Index 0 is the player, index 2 the enemy: `TPOSX+2`, `FIRECT+2`,
+  `COLFLG+2`, `HITS+2`. The cells in between belong to other variables
+  (`COLFLG+2` is `SAVE1+1`).
+* `ATRACT` is FF while a game is played and 0 in the attract mode.
 
-Wer eine Routine verständlicher schreiben will: erst wenn die flüssige
-Darstellung es braucht, und dann als zweite Funktion daneben, die den
-Zustand liest. Die geprüfte Routine bleibt.
+To write a routine more readably: only when the smooth picture needs it,
+and then as a second function next to it that reads the state. The
+checked routine stays.
 
-## Zeitablauf
+## Timing
 
-* Interrupt (NMI): 246,09 pro Sekunde (12,096 MHz / 8 / 6144).
-* Spielframe: wenn der Interrupt `SYNC` gesetzt hat (jeder 16.) und ein
-  Displaypuffer frei ist. Der Puffer wird bei jedem 6. Interrupt
-  gewechselt. Daraus ergeben sich rund 15 Frames pro Sekunde.
-* `bz_main_poll` nach jedem Interrupt: rechnet einen Frame in einem Zug,
-  sobald beides erfüllt ist. Der 6502 des Automaten braucht dafür 50.000
-  bis 100.000 Zyklen und wird in vollen Szenen langsamer als 15 pro
-  Sekunde. Die C-Routinen brauchen keine Zeit (siehe STATUS.md, Tempo).
-* Zwei Displaypuffer (2002 und 2802). `VECRAM` (2000) ist ein Sprung auf
-  den gezeigten. Der Vektorgenerator fängt immer bei 2000 an.
+* Interrupt (NMI): 246.09 a second (12.096 MHz / 8 / 6144).
+* Game frame: when the interrupt has set `SYNC` (every 16th) and a display
+  buffer is free. The buffer is changed at every 6th interrupt. That gives
+  about 15 frames a second.
+* `bz_main_poll` after every interrupt: computes a frame at once when both
+  hold. The cabinet's 6502 needs 50,000 to 100,000 cycles for it and gets
+  slower than 15 a second in full scenes. The C routines take no time (see
+  STATUS.md, pace).
+* Two display buffers (2002 and 2802). `VECRAM` (2000) is a jump to the
+  one shown. The vector generator always starts at 2000.
 
-## Prüfen nach jeder Änderung an `src/game`
+## Checking after every change to `src/game`
 
 ```bash
 sh tools/checkall.sh && sh tools/checkall.sh --nmi
 ```
 
-Beides muss `ALL THE SAME` melden. Wenn nicht: `bzcompare DATEI --from F
---to F --show 40` zeigt die abweichenden Bytes mit Namen. Was der Frame
-gelesen hat: `--trace F`.
+Both must say `ALL THE SAME`. If not: `bzcompare FILE --from F --to F
+--show 40` shows the bytes that differ, with names. What the frame read:
+`--trace F`.
 
-Für neue Spielsituationen eine Aufnahme mit Skript machen
-(`tools/mame/bzcapture.lua`): `coin`, `start`, `fire`, `drive`, `aim` (dreht
-zum Gegner und schießt), `auto` (fährt zufällig), `poke ADRESSE WERT`, `dip`.
-Nützliche Adressen: Punkte `B8`/`B9` (BCD, in Tausend), Panzer `CC`,
-Raketen bisher `02EC` (ab 5 kommen Super-Panzer).
+For new game situations, make a capture with a script
+(`tools/mame/bzcapture.lua`): `coin`, `start`, `fire`, `drive`, `aim`
+(turns to the enemy and fires), `auto` (drives at random), `poke ADDRESS
+VALUE`, `dip`. Useful addresses: score `B8`/`B9` (BCD, in thousands), tanks
+`CC`, missiles so far `02EC` (from 5 on, super tanks come).
 
-## Fallen
+## Traps
 
-* **Quelltext nie über Shell-Heredocs ändern, wenn Backslashes oder
-  Apostrophe vorkommen.** Aus `\n` wird dort ein echter Zeilenumbruch. Das
-  hat hier mehrmals C-Dateien zerstört. Dateien mit dem Edit- oder
-  Write-Werkzeug ändern.
-* Python unter Windows kennt keine Pfade wie `/f/...`. Relativ zum
-  Projektordner arbeiten oder `F:/...` schreiben.
-* MAME merkt sich Optionsschalter, die ein Skript gesetzt hat.
-  `tools/capture.sh` leert deshalb vor jeder Aufnahme seinen
-  Konfigurationsordner.
-* MAME-Lua: `machine:exit()` aus einem Tap beendet MAME nicht. Die Länge
-  einer Aufnahme bestimmt `-seconds_to_run`.
-* Das Spiel liest mit `CMP (0,X)` "um Zeit zu verbrauchen" beliebige
-  Adressen, je nachdem, was in Page 0 steht: auch Schalter, die
-  Zufallszahl oder die Adresse des NMI-Vektors. Die C-Routinen machen
-  diese Zugriffe mit (`IX(0)`), sonst verschiebt sich die Folge der
-  Zufallszahlen. Die Aufnahme erkennt den Interrupt deshalb nicht am
-  Lesen des Vektors allein.
-* Der erste Interrupt nach dem Einschalten darf erst nach einer Periode
-  kommen. Vorher steht der Stackpointer noch nicht, und die
-  Interrupt-Routine hält dann an (Stack-Prüfung `TSX, BMI`).
-* `ROBCHK` wird beim Spielstart aus dem Interrupt aufgerufen und benutzt
-  Math Box und Hilfszellen der Hauptschleife. Das ist im Original so.
+* **Never change source files through shell heredocs when they hold
+  backslashes or apostrophes.** `\n` becomes a real line break there. That
+  broke C files here more than once. Change files with the Edit or Write
+  tool, or a Python script written with Write.
+* Python on Windows knows no paths like `/f/...`. Work relative to the
+  project folder or write `F:/...`.
+* MAME remembers option switches a script has set. `tools/capture.sh`
+  therefore empties its configuration folder before every capture.
+* MAME Lua: `machine:exit()` from a tap does not end MAME. The length of a
+  capture is set by `-seconds_to_run`.
+* The game reads arbitrary addresses with `CMP (0,X)` "to use up time",
+  whatever page 0 points at: switches too, the random number, or the NMI
+  vector's address. The C routines make these reads as well (`IX(0)`), or
+  the sequence of random numbers shifts. So the capture does not recognize
+  the interrupt by the vector being read alone.
+* The first interrupt after power-on must come only after a period. Before
+  that the stack pointer is not set, and the interrupt routine stops (the
+  stack check `TSX, BMI`).
+* `ROBCHK` is called from the interrupt when a game starts and uses the
+  math box and the main loop's scratch cells. That is so in the original.
 
-## Was der Port hinzufügt und wie
+## What the port adds, and how
 
-Alles hier läuft neben dem Spiel. Die C-Routinen rechnen dasselbe wie
-vorher; `checkall.sh` muss nach jeder Änderung weiter "ALL THE SAME" sagen.
+All of this runs beside the game. The C routines compute the same as
+before; `checkall.sh` must still say "ALL THE SAME" after every change.
 
-**Notizen der Zeichenroutinen.** Jede Routine, die in die Displayliste
-schreibt, setzt vorher `m->tag` (`core/tags.h`: Art und Schlüssel, etwa
-Objekt + Panzer). `bz_wr8` legt das Tag zu jedem Wort des Vektor-RAM in
-`m->vgtag`. `bz_avg_run_raw` gibt jede Linie ungeschnitten mit Tag, ROM-
-Unterprogramm (`sub`), Platz darin (`n`) und laufender Nummer (`ord`) aus.
+**The drawing routines' notes.** Every routine that writes to the display
+list sets `m->tag` first (`core/tags.h`: kind and key, say object + tank).
+`bz_wr8` puts the tag next to every word of vector RAM in `m->vgtag`.
+`bz_avg_run_raw` gives every line, uncut, with its tag, ROM subroutine
+(`sub`), place in it (`n`) and running number (`ord`).
 
-**Flüssiges Bild, berechnet** (`render/smooth.c`, `compute`; Vorgabe
-seit 0.1.3). Für jeden Frame liegen die Maschine davor (`a`) und danach
-(`b`) vor. Für ein Bild zur Zeit t wird `a` kopiert, alles Bewegte auf den
-Weg nach `b` gesetzt (`between16`, `between_hl`, `between_angle`; Sprünge
-werden nicht durchflogen) und `bz_picture` zeichnet. Auf der Kopie ist
-`fine` gesetzt: `fine_view` und `fine_object` in `game/view.c` schreiben
-Sinus und Kosinus aus 16 Bit Winkel in die Math Box (BSIN und ACOS sind
-deren Eingänge, kein Speicher). Was neu interpoliert werden muss, wenn
-etwas springt: Die Zeile "single lines" von `bzshot` je Objektart ansehen
-(der Filter dafür war vorübergehend eingebaut, siehe Verlauf in STATUS.md).
-EXPLDE und die Einschläge bewegen sich im Zeichenweg selbst einen Schritt
-weiter; das gilt für jedes Zwischenbild gleich und stört nicht.
+**Smooth picture, computed** (`render/smooth.c`, `compute`; the default
+since 0.1.3). For every frame the machine before (`a`) and after (`b`) is
+at hand. For a picture at time t, `a` is copied, everything that moves is
+set on its way to `b` (`between16`, `between_hl`, `between_angle`; jumps
+are not flown through) and `bz_picture` draws. On the copy `fine` is set:
+`fine_view` and `fine_object` in `game/view.c` write sine and cosine of a
+16-bit angle into the math box (BSIN and ACOS are its inputs, not memory).
+What has to be interpolated anew when something jumps: look at the
+"single lines" line of `bzshot` per kind of object. EXPLDE and the shell
+bursts move a step on in the drawing path itself; that is the same for
+every picture in between and does no harm.
 
-**Flüssiges Bild, Linien verschoben** (`smooth = 2`, das erste Verfahren). Ein Frame zeichnet erst und bewegt
-dann die Welt. Nach dem Frame steht also fest, wie das nächste Bild
-aussieht. `bz_picture` zeichnet es auf einer Kopie der Maschine mit den
-Routinen des Spiels (`draw_only`: `main_body` kehrt nach dem Zeichnen um).
-Zwischen zwei Frames wandert jede Linie der Welt vom Bild zum
-vorausgezeichneten; zugeordnet über Tag, `sub` und `n` oder `ord`. Texte,
-Punkte und Fadenkreuz wandern nicht. Linien, die es nur in einem der
-Bilder gibt, wechseln bei der Hälfte. Das Bild ist dadurch nie hinter dem
-Spiel zurück.
+**Smooth picture, lines moved** (`smooth = 2`, the first way). A frame
+draws first and then moves the world, so after the frame it is settled
+what the next picture looks like. `bz_picture` draws it on a copy of the
+machine with the game's routines (`draw_only`: `main_body` returns after
+drawing). Between two frames every line of the world moves from the
+picture to the one drawn ahead, matched by tag, `sub` and `n` or `ord`.
+Texts, score and sights do not move. Lines that are in only one of the
+pictures change at the half. The picture is so never behind the game.
 
-Die Bildpositionen des Spiels sind auf eine halbe Einheit abgerundet.
-Ferne Objekte stehen deshalb mehrere Frames still und springen dann; am
-Automaten sah das hakelig aus. `pntput` notiert deshalb zu jedem Punkt die
-ungerundeten Quotienten der Math Box (Register 8 und 9 durch 7, Register B
-durch 7), `bz_avg_run_raw` setzt die Linienenden darauf (`bz_avg_exact`,
-Faktor 510). Wer an der Glättung arbeitet, prüft Objekte, nicht nur die
-Berge: Die Berge waren immer gleichmäßig.
+The game's picture positions are rounded down to half a unit, so far
+objects stood still for several frames and then jumped; on the cabinet
+that looked jerky. `pntput` therefore notes for every point the math box's
+unrounded quotients (registers 8 and 9 over 7, register B over 7), and
+`bz_avg_run_raw` sets the line ends on them (`bz_avg_exact`, factor 510).
+Whoever works on the smoothing checks objects, not only the mountains: the
+mountains were always even.
 
-Die Frames kommen ungleichmäßig (18, 18, 12 Interrupts). Der Zeitplan
-beginnt ein Bild eine Periode nach dem vorigen; die Periode ist der
-Mittelwert der letzten sechs Abstände. Hier lag ein Fehler, den erst die
-Messung zeigte: ein fester Plan lief dem Spiel davon, und es wurde gar
-nicht geglättet. Deshalb nach Änderungen an `smooth.c` immer die Zeile
-"the land on a 60 Hz screen" von `bzshot` ansehen (BUILD.md).
+The frames come unevenly (18, 18, 12 interrupts). The schedule starts a
+picture a period after the one before; the period is the mean of the last
+six gaps. There was a fault here that only measuring showed: a fixed
+schedule ran away from the game, and nothing was smoothed at all. So after
+changes to `smooth.c` always look at the line "the land on a 60 Hz
+screen" of `bzshot` (BUILD.md).
 
-**Farbe** (`render/color.c`): eine Tabelle von Tag nach Farbe. Die Art
-eines Hindernisses (Pyramide, Würfel) steht in PTBLO1 im ROM.
+**Line order** (`smooth.c`, `bz_order_steady`, `sm.order = 2`). Texts,
+score, tanks left, the radar's ring and the sights first, in the game's
+own order; then the radar's sweep and blip; then the world. A line on a
+vector tube lands a little differently with every way the beam comes to
+it; drawn first, the score is reached the same way in every picture and
+does not shimmer.
 
-Zwei Paletten: `BZ_PALETTE_FLYER` nach Ataris Flyer (Eisberge, blauer
-Boden, oranger Mond, Gelb und Orange für Logo, Visier und Punkte) und
-`BZ_PALETTE_CLASSIC`. Der Standard-Panzer und die Lebensanzeige sind auf
-Wunsch des Besitzers in beiden grün, wie unter der Farbfolie.
+**Color** (`render/color.c`): a table from tag to color. The kind of an
+obstacle (pyramid, cube; four shapes, 0x00, 0x0c, 0x01, 0x0f) is in
+PTBLO1 in the ROM. Palettes: `BZ_PALETTE_FLYER` after Atari's flyer (blue
+ground and horizon, lilac mountains, the obstacles from cyan to magenta,
+an orange moon, yellow and orange for logo, sights and score) and
+`BZ_PALETTE_CLASSIC`. The standard tank and the tanks-left display are
+green in both, as under the overlay, as the owner wished. `color_mode`
+also has the overlay (in the menu ORIGINAL) and white.
 
-**Verdeckung** (`render/solid.c`, nach `solid.c` des Star-Wars-Ports).
-`dovect` notiert zu jedem Vektor Objektnummer, Punktnummer und Entfernung
-des Punkts (`m->vgnote`; die Entfernung ist das, wodurch die Math Box
-teilt, Register 7). `bz_solid_init` liest Punkte und Zeichenlisten aller
-Objekte aus dem ROM und findet die Flächen als ebene Ringe von Linien.
-Pro Bild entsteht aus jeder Fläche ein Polygon mit der Ebene von
-1/Entfernung; Linien der Welt werden abgeschnitten, wo sie dahinter
-liegen. Kanten der Fläche selbst bleiben. Linien, die an einer Ecke der
-Fläche beginnen, liegen als Ganzes davor oder dahinter. Berge, Mond und
-Vulkan gelten als unendlich weit. Texte, Radar, Visier und der Sprung in
-der Scheibe werden nie geschnitten. Reihenfolge in `smooth.c`: erst
-Zwischenbild aus ganzen Linien, dann Verdeckung, dann Fenster.
+**Occlusion** (`render/solid.c`, after the Star Wars port's `solid.c`).
+`dovect` notes for every vector the object number, point number and the
+point's distance (`m->vgnote`; the distance is what the math box divides
+by, register 7). `bz_solid_init` reads the points and drawing lists of
+every object from the ROM and finds the faces as flat rings of lines. For
+every picture, every face becomes a polygon with the plane of
+1/distance; lines of the world are cut where they lie behind it. The
+face's own edges stay. Lines that start at a corner of the face are in
+front or behind as a whole. Mountains, moon and volcano count as
+infinitely far. Texts, radar, sights and the crack in the screen are never
+cut. The order in `smooth.c`: the picture between frames from whole lines
+first, then occlusion, then the window.
 
-**Bodengitter** (`render/ground.c`). Die Projektion des Spiels,
-ausgemessen mit `_scratch/probe.c`: voraus = dx cos a + dy sin a, seitlich
-= -dx sin a + dy cos a (a: TANGLE, LANGLE als 16 Bit pro Umdrehung),
-Schirm X = -509,5 * seitlich / voraus, Schirm Y = 509,5 * Höhe / voraus,
-der Boden liegt 320 unter dem Auge. Das Gitter wird für jedes gezeigte
-Bild aus der Lage des Spielers neu erzeugt (zwischen zwei Frames
-eingesetzt), nicht verschoben. Das Wippen beim Anstoßen (BOUNCE) macht es
-nicht mit.
+**Ground grid** (`render/ground.c`). The game's projection, measured with
+`_scratch/probe.c`: ahead = dx cos a + dy sin a, aside = -dx sin a + dy
+cos a (a: TANGLE, LANGLE as 16 bits a turn), screen X = -509.5 * aside /
+ahead, screen Y = 509.5 * height / ahead, the ground 320 under the eye.
+The grid is made anew for every picture shown from the player's place
+(between two frames), not moved. It reaches to 24000 (`FAR`); every
+stretch is as bright as its own middle is far (`lit_at`: full to 5000,
+then down to nothing at `FAR`, without steps). It does not bob with
+BOUNCE.
 
-**Sound-Ersatz** (`sound/samples.c`, nach `samples.c` des Star-Wars-Ports,
-Liste in docs/SOUNDS.md). `bz_sndon` meldet jede gestartete Melodie über
-`m->sound_request`. Schuss und Explosion starten an der steigenden Flanke
-des Schalters im Sound-Latch. Rakete und Motor sind Schleifen. Was ersetzt
-ist, wird im Modell stumm geschaltet (`pokey.mute`, `shell_replaced`
-usw.). Im Testmenü steht das Spiel; `snd.test` lässt dann nur die Stimme
-des Sound-Tests durch.
+**Sound replacement** (`sound/samples.c`, after the Star Wars port's
+`samples.c`; list in docs/SOUNDS.md). `bz_sndon` reports every tune
+started through `m->sound_request`. Shell and explosion start on the
+rising edge of their switch in the sound latch. Missile, engines and the
+enemy's engine are loops. What is replaced is silenced in the model
+(`pokey.mute`, `shell_replaced` and so on). In the test menu the game
+stands; `snd.test` then lets only the sound test's voice through.
 
-**Enhanced-Optionen im Bild** (`render/enhance.c`). `bz_enhance_frame`
-merkt sich nach jedem Frame, was geschah (Gegner zerfällt: Typ aus
-`m->enemy_id`; Untertasse getroffen; Schuss gefeuert oder eingeschlagen)
-und erzeugt Funken und Staub. `bz_enhance_scene` nimmt aus den Linien des
-Bildes die Silhouette der Berge (je Spalte) und den Mond.
-`bz_enhance_world` fügt zweite Bergreihe (nur über der Silhouette),
-Sterne (hinter Silhouette und Mond, funkelnd), Funken und Staub als ganze
-Linien mit Entfernung ein, nach den Linien des Spiels und vor der
-Verdeckung. `bz_enhance_overlay` zeichnet Blitz und Hebelanzeige nach dem
-Fensterschnitt. `bz_enhance_color` färbt Trümmer und Funken in der Farbe
-des Getroffenen (`l->model` trägt die ID), Dunst und Vulkan. Eigene Linien
-tragen `BZ_TAG_FX`. Die zweite Bergreihe ist periodisch über 0,6 × 65536,
-damit der Sprung des Winkels bei einer vollen Drehung nahtlos bleibt.
+**Sound output** (`platform/audio.c`, since 0.2.0). Once a picture the
+new samples of the ring go to the SDK's stream (`vp_stream_play`,
+`vp_stream_write`), about a tenth of a second ahead; more than a quarter
+of a second waiting is dropped, oldest first. The SDK mixes the stream at
+the cabinet menu's MUSIC VOLUME. The log line "battlezone pace" counts the
+times the stream ran dry and the samples dropped.
 
-**Strahlweg.** Die Platine braucht für den dunklen Weg zwischen Linien
-so viel Zeit wie für gezeichnete Linien. Über etwa 170.000 Einheiten
-(lit plus blank im Protokoll) schafft sie 50 Bilder pro Sekunde nicht
-mehr, Bilder kommen zu spät. `bz_order_lines` hält den dunklen Weg kurz;
-`bzshot` gibt ihn aus ("the beam's way"). Neue Effekte immer daran messen.
+**Stereo, distance, ducking** (`sound/sound.c`). The ring holds pairs.
+`bz_sound_place` reads where the enemy and the saucer are from memory and
+whether the enemy tank lives and drives (`COLFLG+2`, `R2D3FL`, his place).
+The soft shot and the soft explosion count as the enemy's, POKEY channels
+3 and 4 as the missile, the tunes SAUSND and DISINT as the saucer.
+`enemy_gain` (his shot, down to 0.3), `enemy_boom` (his explosion, down to
+0.55), `enemy_hum` (his engine, down to 0.06). Ducking (`DUCK_TO`): the
+engines go to 0.55 while a tune, a shot or an explosion sounds. With the
+recordings the POKEY's tunes are `TUNE_BOOST` (3.5) louder.
 
-**Bildrate der Platine.** `board_hz` (Vorgabe 50) muss der Rate der
-Platine entsprechen (DVG REFRESH im Menü des Automaten), sonst stockt die
-Bewegung, weil die Platine ihr letztes Bild wiederholt. Bei Rückmeldung
-"stufenhaft" zuerst das prüfen.
+**Enhanced options in the picture** (`render/enhance.c`).
+`bz_enhance_frame` remembers after every frame what happened (the enemy
+comes apart: its kind from `m->enemy_id`; the saucer is hit; a shell is
+fired or comes down) and makes sparks and dust. `bz_enhance_scene` takes
+the mountains' skyline (per column) and the moon from the picture's lines.
+`bz_enhance_world` adds the second mountain row (only over the skyline),
+the stars (behind the skyline and the moon, twinkling), sparks and dust as
+whole lines with a distance, after the game's lines and before occlusion.
+`bz_enhance_overlay` draws the flash and the lever gauges after the
+window cut. `bz_enhance_color` colors the wreck and the sparks in the
+color of what was hit (`l->model` holds its id), the far row and the
+volcano. Its own lines carry `BZ_TAG_FX`. The game's mountains and moon
+move 0.996 screen units every 32 angle steps (`MOUNT_RATE`, 2040 units a
+turn); the stars turn with them (they are as far as the moon), the far
+row half as fast (`PARALLAX`; periodic over its circle, so a full turn is
+seamless).
 
-**Stereo** (`sound/sound.c`). Der Ring hält Paare. `bz_sound_place` liest
-Lage von Gegner und Untertasse aus dem Speicher. Leiser Schuss und leise
-Explosion gelten als die des Gegners, POKEY-Kanäle 3 und 4 als Rakete,
-die Melodien SAUSND und DISINT als Untertasse. `pokey.level[]` liefert
-dafür die Kanäle einzeln.
+**The beam's way.** The board needs as much time for the dark way between
+lines as for lit lines. Over about 170,000 units (lit plus blank in the
+log) it does not make 50 pictures a second, and pictures come late. The
+grid at 24000 brought the cabinet to about 85,000 lit and up to 169,000 in
+all (in the attract mode). `bzshot` prints the way ("the beam's way").
+Measure every new effect with it.
 
-**Tempo des Automaten** (`game/pace.c`). Die Zyklen eines Frames werden
-aus gezählten Lese- und Schreibzugriffen geschätzt (angepasst an das
-Original auf dem 6502-Kern, 790 Zyklen Abweichung bei 56.000 im Mittel).
-Der Interrupt nimmt dem Hauptprogramm 690 von 6144 Zyklen. Entscheidend
-ist nicht, dass Frames länger als 16 Interrupts dauern (unter 1 Prozent),
-sondern wann der Displaypuffer fertig gemeldet wird: Der Interrupt
-übergibt ihn nur an jedem sechsten. Deshalb wird die Arbeit eines Frames
-erst ausgeführt, wenn der 6502 damit fertig wäre (`bz_main_ready`, dann
-warten). Ergebnis: 14,62 Frames pro Sekunde im Attract-Modus gegen 14,69
-in MAME, 14,77 im Spiel gegen 14,8 bis 15,0.
+**The board's picture rate.** `board_hz` (default 50) must match the
+board's rate (DVG REFRESH in the cabinet's menu), or the motion stutters
+because the board shows its last picture again. On a report of "steps",
+check that first.
 
-**Highscores** (`render/hiscore.c`): HSCTBL und INITLS, 60 Bytes, nach
-`bz_pwron` geladen, gespeichert sobald sich die Tabelle ändert und keine
-Initialen mehr eingegeben werden.
+**The cabinet's pace** (`game/pace.c`). A frame's cycles are estimated
+from counted reads and writes (fitted to the original on the 6502 core,
+790 cycles off at 56,000 on average). The interrupt takes 690 of 6144
+cycles from the main program. What matters is not that frames take longer
+than 16 interrupts (under 1 percent) but when the display buffer is
+reported done: the interrupt hands it over only at every sixth. So a
+frame's work is done only when the 6502 would be done with it
+(`bz_main_ready`, then wait). The result: 14.62 frames a second in the
+attract mode against 14.69 in MAME, 14.77 in a game against 14.8 to 15.0.
 
-**Analoges Fahren** (`analog_motion` in `game/play.c`, die einzige
-Ergänzung im Spiel selbst, nur aktiv mit `m->analog.on`). Die acht
-Bewegungen des Automaten sind die Ecken von: Schritte = l + r, Drehung =
-(r - l) / 2, mit l und r von -1 bis 1. Dazwischen wird stufenlos
-gerechnet, Kollision und Motorton laufen über denselben Code wie vorher.
+**High scores** (`render/hiscore.c`): HSCTBL and INITLS, 60 bytes,
+loaded after `bz_pwron`, saved as soon as the table changes and no
+initials are being entered. The same table as `save/highscores.txt`
+(`bz_hiscore_save_text`: initials from the vector ROM's alphabet, 16..48
+A..Z, 02..14 digits, 00 and 4A a space; points BCD in thousands) for the
+cabinet's menu and marquee.
 
-**Steuerung** (`platform/controls.c`): eigene Belegungen über SDL neben
-`vp_input`, je Aktion bis zu acht (" or ", `parse_binds`, im Menü
-`bz_config_bind_add`). Seit 0.1.13 kein Modus mehr: alle drei Arten zu
-fahren gelten zugleich, Vorrang Hebel, dann Yoke, dann ein Joystick;
-`bz_controls.mode` ist die zuletzt benutzte (für den Initialen-Text). `auto` heißt: die Aktion des SDK. Das Menü öffnet nur Tab.
-`p1_button6` wäre naheliegend, ist am PC aber die Taste X und kam damit
-einer freien Belegung in die Quere.
+**The credit.** Under the attract mode's "(C)(P) ATARI 1980" the port
+writes "ENHANCED BY ENDPRODUKT" in the same color, a little smaller
+(`main.c`, after `bz_draw_lines`, found by the text's tag 0x2e).
 
-## Nächste Schritte
+**Analog driving** (`analog_motion` in `game/play.c`, the only addition
+in the game itself, active only with `m->analog.on`). The cabinet's eight
+motions are the corners of: steps = l + r, turn = (r - l) / 2, with l and
+r from -1 to 1. In between it is computed without steps; collision and
+engine sound go through the same code as before.
 
-1. **Am Bildschirm spielen und anhören.** Fenster und Menü sind bisher
-   nur über Bildschirmfotos und Tastenskripte geprüft
-   (`_scratch/winshot.ps1`), Joysticks und Yoke gar nicht.
-2. **Ton.** Pegel und Klang gegen eine MAME-Aufnahme (`-wavwrite`) und
-   gegen Aufnahmen eines echten Automaten abgleichen, dann verbessern
-   (bessere Filter, Stereo, eigene Samples als Option).
-3. **Sound-Paket anhören und nachbessern.** Seit 0.1.9 aus
-   Freesound-Aufnahmen und Battle Zone II (Schuss; `tools/mkfreesound.py
-   assets/freesound --bzoneii assets/bzoneii`, Schichten und Pegel im
-   Skript), `sound_replace` in der Vorgabe an. Battle-Zone-II-Dateien nicht
-   weitergeben (Lizenz ungeklärt). Weitere
-   Aufnahmen: nur CC0, über den Chrome des Besitzers, je Download fragen;
-   ein Download nach dem anderen (mehrere in einem Batch lehnt die
-   Prüfung ab).
-4. **Farben weiter abstimmen** nach Rückmeldung des Besitzers.
-   Alles steht in `render/color.c`.
-5. **Glättung verfeinern**, falls nötig: Beim Drehen werden die Endpunkte
-   der Linien geradeaus verschoben, nicht neu projiziert. Bei 15 Frames
-   pro Sekunde ist der Fehler klein. Sichtbar werden könnte er bei sehr
-   nahen Objekten.
-6. **Automat.** Das Spiel ist dort installiert (BUILD.md, Abschnitt
-   Automat). Offen: Bild auf der Röhre ansehen und kalibrieren, prüfen ob
-   es mit Gitter, Sternen und Spuren ruhig steht (rund 65.000 Einheiten
-   gezeichnete Länge pro Bild bei 45 Hz), Steuerung prüfen. Paket:
-   `tools/make_vpk.sh`, Hochladen in den Drive-Ordner "games" (BUILD.md).
+**Controls** (`platform/controls.c`, `platform/vpbind.[ch]`): bindings
+read directly through SDL (keyboard, joysticks, mouse buttons), several per
+action (" or ", `parse_binds`). AUTO is `AUTO_SPEC` in controls.c (arrow
+keys or the first stick, E/D/I/K, left Ctrl + the first joystick button +
+the left mouse button, 1, 5); the yoke's AUTO is the joystick with "yoke"
+in its name (`vpb_yoke`), else joystick 1. Laying out in the menu is as in
+the cabinet's other vector games (vpbind.h; the master copy is the Tempest
+2000 port's): START/Enter, then a control; the first replaces, further ones
+add; START 2 NONE, Delete AUTO. The menu goes by its own controls only
+(`bz_nav` through vpbind). Since 0.1.13 there is no mode: all three ways to
+drive count at once, the levers first, then the yoke, then the one
+joystick; `bz_controls.mode` is the way used last (for the initials'
+line). Only Tab (or a binding, or start and fire held) opens the menu.
+
+## Next steps
+
+1. **Play and listen on the cabinet.** Window and menu were checked only
+   by screenshots and key scripts (`_scratch/winshot.ps1`).
+2. **The sound pack.** Since 0.1.9 from Freesound recordings and Battle
+   Zone II (the shot; `tools/mkfreesound.py assets/freesound --bzoneii
+   assets/bzoneii`, layers and levels in the script), on by default.
+   Battle Zone II's files: license not known. More recordings: CC0 only,
+   through the owner's Chrome, asking for each download; one download at a
+   time (several in one batch are refused by the check).
+3. **Colors**: everything is in `render/color.c`; tune after the owner's
+   word.
+4. **Smoothing**, if needed: when turning, the line ends are moved
+   straight, not projected anew. At 15 frames a second the error is small;
+   it could show with very near objects.
+5. **Releases**: `tools/make_vpk.sh`, then a GitHub release and the Drive
+   folder "games" (BUILD.md).

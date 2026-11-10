@@ -124,7 +124,7 @@ def engines(d, out):
     sand = load(d, 187676)          # a tank driving in the sand
     L = 8.0
     idle = at_rms(loop_of(idle_hum, 4.0, L), -22) + at_rms(loop_of(mech, 0.0, L), -24)
-    write(os.path.join(out, "ENGINE_IDLE.wav"), at_rms(steady(idle), -22))     # (3 dB under 0.1.10: "etwas leiser")
+    write(os.path.join(out, "ENGINE_IDLE.wav"), at_rms(steady(idle), -22))     # (3 dB under 0.1.10: the owner found it a little loud)
     rev = (at_rms(loop_of(t26, 2.0, L), -20) + at_rms(loop_of(mech, 3.0, L), -25) +
            at_rms(loop_of(clank, 0.0, L), -26) + at_rms(loop_of(tracked, 0.5, L), -27))
     write(os.path.join(out, "ENGINE_REV.wav"), at_rms(steady(rev), -19))

@@ -1,9 +1,9 @@
-# Bauen und Prüfen
+# Building and checking
 
-## Einmalig holen
+## Fetch once
 
-Zwei Dinge gehören nicht zum Projekt und werden daneben geholt (beide
-stehen in `.gitignore`):
+Two things are not part of the project and are fetched next to it (both
+are in `.gitignore`):
 
 ```bash
 git clone --depth 1 https://github.com/historicalsource/battlezone.git upstream
@@ -13,14 +13,19 @@ git clone --depth 1 https://github.com/historicalsource/battlezone.git upstream
 git clone --depth 1 https://github.com/Goldfinch2/VectorPie.git external/VectorPie
 ```
 
-`upstream` ist der Originalquelltext (nur lesen). `external/VectorPie` ist
-das SDK für die Ausgabe. Ohne SDK lassen sich die Werkzeuge trotzdem bauen
-(`-DBZ_BUILD_GAME=OFF`).
+`upstream` is the original source code (read only). `external/VectorPie`
+is the SDK for the output (0.9.0 or later: the sound goes out through its
+`vp_stream_play`). Without the SDK the tools still build
+(`-DBZ_BUILD_GAME=OFF`). To bring the SDK up to date:
+
+```bash
+git -C external/VectorPie pull --ff-only
+```
 
 ## PC (Windows)
 
-Voraussetzung: MSYS2 mit MinGW-w64-GCC und SDL2 unter `C:\msys64\mingw64`,
-dazu CMake und Ninja.
+Needs MSYS2 with MinGW-w64 GCC and SDL2 in `C:\msys64\mingw64`, plus
+CMake and Ninja.
 
 ```bash
 export PATH="/c/msys64/mingw64/bin:$PATH"
@@ -34,7 +39,7 @@ cmake -S . -B build/pc -G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ 
 cmake --build build/pc
 ```
 
-Starten (die ROMs: `--roms`, oder `rom_path` in `build/pc/save/battlezone.ini`):
+Run it (the ROMs: `--roms`, or `rom_path` in `build/pc/save/battlezone.ini`):
 
 ```bash
 build/pc/battlezone.exe --windowed --roms D:/Mame/roms
@@ -46,23 +51,24 @@ build/pc/battlezone.exe --windowed --roms D:/Mame/roms
 build/pc/test_core.exe
 ```
 
-Braucht keine ROMs: 6502-Kern, Math Box, Vektorgenerator, die Rechenmakros
-der C-Routinen gegen den Kern.
+Needs no ROMs: the 6502 core, the math box, the vector generator, and the
+arithmetic macros of the C routines against the core.
 
-## Prüfen gegen MAME
+## Checking against MAME
 
-MAME 0.289 und sein ROM-Ordner: `$BZ_MAME` (Vorgabe `D:/Mame/mame.exe`) und
-`$BZ_MAME_ROMS` (Vorgabe `D:/Mame/roms`). MAME läuft ohne Bild und Ton mit
-einem eigenen Konfigurationsordner unter `_scratch/mame`, der vor jeder
-Aufnahme geleert wird. Die eigenen MAME-Einstellungen bleiben unberührt.
+MAME 0.289 and its ROM folder: `$BZ_MAME` (default `D:/Mame/mame.exe`) and
+`$BZ_MAME_ROMS` (default `D:/Mame/roms`). MAME runs without picture and
+sound, with a configuration folder of its own under `_scratch/mame` that is
+emptied before every capture. Your own MAME settings are not touched.
 
-Alle Standardaufnahmen neu machen (rund 10 Minuten, 220 MB in `_scratch/cap`):
+Make all the standard captures again (about 10 minutes, 220 MB in
+`_scratch/cap`):
 
 ```bash
 sh tools/captures.sh
 ```
 
-Alles vergleichen:
+Compare everything:
 
 ```bash
 sh tools/checkall.sh
@@ -76,12 +82,12 @@ sh tools/checkall.sh --emu
 sh tools/checkall.sh --nmi
 ```
 
-Ohne Option prüft das die C-Routinen Frame für Frame, mit `--emu` das
-Originalprogramm auf dem 6502-Kern, mit `--nmi` Interrupt-Routine und
-Einschaltzustand in C gegen das Original auf dem Kern. Am Ende steht
-`ALL THE SAME` oder `DIFFERENCES`.
+Without an option this checks the C routines frame by frame; with `--emu`
+the original program on the 6502 core; with `--nmi` the interrupt routine
+and the power-on state in C against the original on the core. The last
+line is `ALL THE SAME` or `DIFFERENCES`.
 
-Eine einzelne Aufnahme (Skript: siehe `tools/mame/bzcapture.lua`):
+A single capture (the script: see `tools/mame/bzcapture.lua`):
 
 ```bash
 sh tools/capture.sh _scratch/cap/test.bzcap 120 "60 coin 2;70 coin 2;130 start 2;140 aim 3"
@@ -91,27 +97,25 @@ sh tools/capture.sh _scratch/cap/test.bzcap 120 "60 coin 2;70 coin 2;130 start 2
 build/pc/bzcompare.exe _scratch/cap/test.bzcap --show 20
 ```
 
-`bzcompare` kennt `--emu`, `--from F`, `--to F`, `--max N` (gemeldete
-Frames), `--show N` (gemeldete Bytes je Frame), `--trace F` (alle
-Schalter-Lesezugriffe des Frames F).
+`bzcompare` knows `--emu`, `--from F`, `--to F`, `--max N` (frames
+reported), `--show N` (bytes reported per frame), `--trace F` (every switch
+read of frame F).
 
-### Wie der Vergleich arbeitet
+### How the comparison works
 
-Die Aufnahme enthält zu jedem Spielframe den Speicher des Originals beim
-Start des Frames (RAM, Vektor-RAM, Math Box), dazu die Zufallszahlen und
-die Lesezugriffe auf Schalter und auf den Speicher des Interrupts, die
-die Hauptschleife in diesem Frame gemacht hat. `bzcompare` lädt den
-Speicher eines Frames, lässt einen Frame laufen und vergleicht mit dem
-Speicher des nächsten. Jeder Frame wird für sich geprüft, ein Fehler
-verdeckt den nächsten nicht.
+For every game frame the capture holds the original's memory at the start
+of the frame (RAM, vector RAM, math box), plus the random numbers and the
+reads of the switches and of the interrupt's memory that the main loop
+made in that frame. `bzcompare` loads a frame's memory, runs one frame and
+compares with the memory of the next. Every frame is checked on its own;
+one difference does not hide the next.
 
-Nicht verglichen wird, was dem Interrupt gehört (Münzen, Credits,
-Sync, Melodien), weil er in MAME zu anderen Zeitpunkten kam. Dafür gibt es
-`bznmi`.
+What belongs to the interrupt (coins, credits, sync, tunes) is not
+compared, because in MAME it came at other moments. `bznmi` checks that.
 
-## Abdeckung
+## Coverage
 
-Welche Zeilen der C-Routinen die Aufnahmen durchlaufen:
+Which lines of the C routines the captures run through:
 
 ```bash
 cmake -S . -B build/cov -G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DBZ_BUILD_GAME=OFF -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_C_FLAGS=--coverage -O0"
@@ -125,72 +129,80 @@ cmake --build build/cov
 sh tools/coverage.sh
 ```
 
-## Bild und Ton ohne Bildschirm
+## Picture and sound without a screen
 
 ```bash
 build/pc/bzshot.exe --roms D:/Mame/roms --seconds 40 --play "3 coin;5 start;6 drive f f;12 fire" --svg _scratch/shots/play.svg --at 20 --wav _scratch/shots/play.wav
 ```
 
-`magick -density 60 bild.svg bild.png` macht daraus ein PNG. Mit
-`--original` läuft das Originalprogramm auf dem Kern. `--color white`,
-`--color overlay` und `--nosmooth` schalten Farbe und Zwischenbilder ab,
-`--color classic` wählt die erste Palette, `--nosolid` und `--nogrid`
-schalten Verdeckung und Bodengitter ab. `--sounds ORDNER` lädt Aufnahmen
-und meldet am Ende, wie oft jede gestartet wurde. `--soundlist` gibt die
-Längen der acht POKEY-Melodien aus.
+`magick -density 60 picture.svg picture.png` makes a PNG of it. With
+`--original` the original program runs on the core. `--color white`,
+`--color overlay` and `--nosmooth` switch color and the pictures between
+frames off, `--color classic` chooses the first palette, `--nosolid` and
+`--nogrid` switch occlusion and the ground grid off. `--sounds FOLDER`
+loads recordings and reports at the end how often each was started.
+`--soundlist` prints the lengths of the POKEY's eight tunes. `--every S`
+writes a numbered picture every S seconds (0.01667: every picture of a
+60 Hz screen).
 
-`bzshot` misst bei jedem Lauf auch die flüssige Darstellung:
+On every run `bzshot` also measures how smooth the picture is:
 
-* wie gut das vorausgezeichnete Bild das nächste Bild des Spiels trifft
-  (Zeile "pictures drawn ahead")
-* wie gleichmäßig die Berge auf einem 60-Hz-Schirm beim Drehen wandern
-  (Zeile "the land on a 60 Hz screen"), mit `--nosmooth` zum Vergleich
+* how well the picture drawn ahead meets the game's next one (the line
+  "pictures drawn ahead")
+* how evenly the mountains move across a 60 Hz screen while turning (the
+  line "the land on a 60 Hz screen"), with `--nosmooth` to compare
+* "single lines": how much the step of single lines changes from picture
+  to picture (a few percent is even, 200 is stop-and-go)
+* "the beam's way": the lit and the dark length per picture, the board's
+  cost
 
-`--hz N` misst die Gleichmäßigkeit bei N Bildern pro Sekunde (Automat:
-50), `--rounded` nimmt die gerundeten Positionen des Spiels, `--lines`
-verschiebt Linien, statt die Zwischenbilder zu berechnen. Die Zeile
-"single lines" sagt, wie stark sich der Schritt einzelner Linien von Bild
-zu Bild ändert: wenige Prozent sind gleichmäßig, 200 sind Stop-and-go.
-`--plain` schaltet alle Enhanced-Optionen ab, `--pace` das Tempo des
-Automaten. Im Skript lässt `aim` den Panzer selbst auf den Gegner
-drehen und schießen, so kommen Abschüsse ins Bild. Der Ton ist stereo.
+`--hz N` measures the evenness at N pictures a second (the cabinet: 50),
+`--rounded` takes the game's rounded positions, `--lines` moves lines
+instead of computing the pictures between frames. `--plain` switches every
+enhanced option off, `--pace` the cabinet's pace. In the script, `aim`
+makes the tank turn to the enemy and fire by itself, so hits get into the
+picture. The sound is stereo.
 
-Das Tempo-Modell (`src/game/pace.c`) neu anpassen:
+Fitting the pace model (`src/game/pace.c`) again:
 
 ```bash
 : > _scratch/pace.csv; for f in _scratch/cap/*.bzcap; do build/pc/bzcompare.exe "$f" --quiet --csv _scratch/pace.csv; done
 python -I _scratch/pacefit.py
 ```
 
-`bznmi` gibt aus, wie viele Zyklen ein Interrupt braucht. Das Sound-Paket
-erzeugt `python -I tools/mksounds.py`. Den Ton gegen MAME prüft
-`sh tools/soundcheck.sh` (braucht ein Python mit numpy, `BZ_PYTHON`). Die Sounds der Platine selbst
-schreibt `build/pc/bzsound.exe --roms D:/Mame/roms` nach `sounds/`
-(docs/SOUNDS.md).
+`bznmi` prints how many cycles an interrupt takes. `sh tools/soundcheck.sh`
+checks the sound against MAME (needs a Python with numpy, `BZ_PYTHON`). The
+board's own sounds are written to `sounds/` by
+`build/pc/bzsound.exe --roms D:/Mame/roms` (docs/SOUNDS.md).
 
-Der analoge Modus lässt sich im Skript mit `yoke L R` fahren (beide Hebel,
--256 bis 256). `sh tools/checkanalog.sh` prüft, dass er an den Anschlägen
-dasselbe tut wie die Hebelschalter.
+The sound pack in `package/sounds` is mixed from recordings by
+`python -I tools/mkfreesound.py assets/freesound --bzoneii assets/bzoneii`
+(needs numpy and soundfile). `tools/mksounds.py` makes the older computed
+sounds (into `_scratch/synth`, not used).
 
-## Symbole neu erzeugen
+The analog mode can be driven in the script with `yoke L R` (both levers,
+-256 to 256). `sh tools/checkanalog.sh` checks that at the ends it does
+the same as the lever switches.
 
-`src/core/bz_symbols.h` wird erzeugt und nicht von Hand geändert:
+## Making the symbols again
+
+`src/core/bz_symbols.h` is generated, not edited by hand:
 
 ```bash
 python -I tools/mksyms.py > src/core/bz_symbols.h
 ```
 
-Adressen nachsehen (ROMs entpackt in einem Ordner, mit `bzonea/036414-01.e1`):
+Looking up addresses (the ROMs unpacked in a folder, with
+`bzonea/036414-01.e1`):
 
 ```bash
 python -I tools/dis6502.py _scratch/bzroms 6810 68D5
 ```
 
-## Automat (Raspberry Pi, VectorPie)
+## The cabinet (Raspberry Pi, VectorPie)
 
-Von Windows aus, ohne WSL: clang und lld vom PC gegen eine Kopie der
-Bibliotheken des Automaten (voreingestellt die des Tempest-2000-Ports).
-In Git Bash:
+From Windows, without WSL: clang and lld on the PC against a copy of the
+cabinet's libraries (by default the Tempest 2000 port's). In Git Bash:
 
 ```bash
 export PATH="/c/Users/ocare/.local/share/retcomm/toolchains/cmake-clang-v1/latest/bin:$PATH"
@@ -199,34 +211,37 @@ cmake --build build/pi --target battlezone
 sh tools/deploy.sh
 ```
 
-`tools/deploy.sh` kopiert Programm, `game.ini`, `battlezone.ini`,
-`marquee.png`, `run.sh` und das Sound-Paket nach
-`/persistent/games/bzenhanced` auf dem Automaten (`pi@192.168.0.122`),
-beendet ein laufendes Spiel und startet das neue über `run.sh`. Das hält
-das Menü des Automaten an und holt es zurück, wenn das Spiel endet. Die
-Ausgabe mit den Bildkosten steht dort in `run.log`.
+`tools/deploy.sh` copies the program, `game.ini`, `battlezone.ini`,
+`marquee.png`, `run.sh` and the sound pack to `/persistent/games/bzenhanced`
+on the cabinet (`pi@192.168.0.122`), ends a game that is running and starts
+the new one through `run.sh`, which holds the cabinet's menu and brings it
+back when the game ends. The output with the picture costs is in `run.log`
+there. If another game has the board, the new build is only installed.
 
-Der Ordner ist zugleich das Paket, das das Menü kennt
-(`external/VectorPie/sdk/docs/07-packages.md`): Titel, Hersteller und
-Marquee kommen aus `package/game.ini`. Das Menü liest die Manifeste beim
-Start. Vor einem neuen Stand die Version in `package/game.ini` hochzählen.
+The folder is also the package the menu knows
+(`external/VectorPie/sdk/docs/07-packages.md`): title, manufacturer and
+marquee come from `package/game.ini`. The menu reads the manifests when it
+starts. Count the version in `package/game.ini` up before a new release.
 
-Paketdatei für andere Automaten: `sh tools/make_vpk.sh` (nach dem Pi-Build)
-macht `build/bzenhanced-<Version>.vpk` mit Programm, `game.ini`,
-`battlezone.ini`, Marquee und Sounds (samt `sounds/CREDITS.txt`), ohne
-ROMs. Installieren über das Menü des Automaten (Settings -> GAMES ->
-INSTALL GAMES) aus `/persistent/games/packages/` oder dem `games/`-Ordner
-eines USB-Sticks. Hochladen in den geteilten Google-Drive-Ordner "games"
-(https://drive.google.com/drive/folders/1N5vPb5K46OlYJ-xtTOY6IWD4E5GqMYiS):
-über den Chrome des Besitzers, "Neu" -> "Datei hochladen".
+The package file for other cabinets: `sh tools/make_vpk.sh` (after the Pi
+build) makes `build/bzenhanced-<version>.vpk` with the program, `game.ini`,
+`battlezone.ini`, the marquee and the sounds (with `sounds/CREDITS.txt`),
+without ROMs. It is installed from the cabinet's menu (Settings -> GAMES
+-> INSTALL GAMES), from `/persistent/games/packages/` or a USB drive's
+`games/` folder. Releases: a GitHub release with the package
+(`gh release create v<version> build/bzenhanced-<version>.vpk`), and the
+shared Google Drive folder "games"
+(https://drive.google.com/drive/folders/1N5vPb5K46OlYJ-xtTOY6IWD4E5GqMYiS),
+uploaded through the owner's Chrome, "New" -> "File upload".
 
-Die ROMs findet das Programm über `dir_rom` der `advmame.rc` des
-Automaten (`/usr/local/share/advance/rom/bzone.zip`). Eigene Einstellungen
-und Highscores liegen dort unter `save/`.
+The program finds the ROMs through `dir_rom` in the cabinet's `advmame.rc`
+(`/usr/local/share/advance/rom/bzone.zip`). Settings and high scores are
+kept there under `save/`.
 
-Mit `VP_STATS=1` (so startet `run.sh`) schreibt das Programm jede Sekunde
-eine Zeile "battlezone pace": Abstand der Bilder, Frames des Spiels, und
-wie viele Bilder stillstehen mussten.
+With `VP_STATS=1` (as `run.sh` starts it) the program writes a
+"battlezone pace" line every second: the time between pictures, the game's
+frames, how many pictures had to stand still, and the sound (times the
+stream ran dry, samples dropped, the loudest sample).
 
-Ohne Tastatur öffnet sich das Testmenü, wenn Start und Feuer zwei
-Sekunden zusammen gehalten werden.
+Without a keyboard, the test menu opens when start and fire are held
+together for two seconds.

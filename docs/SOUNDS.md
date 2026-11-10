@@ -1,279 +1,290 @@
 # Sounds
 
-Alle 15 Sounds, die das Spiel macht. Jeder lässt sich einzeln durch eine
-Aufnahme ersetzen: eine WAV-Datei mit dem Namen aus der Tabelle, abgelegt
-in `sounds/` neben dem Programm oder in `save/sounds/`. Sounds ohne Datei
-klingen wie bisher.
+All 15 sounds the game makes. Each can be replaced on its own by a
+recording: a WAV file named as in the tables, in `sounds/` next to the
+program or in `save/sounds/`. Sounds without a file sound as they always
+did.
 
-* Format: WAV, PCM, 8 oder 16 Bit, Mono oder Stereo, beliebige Rate.
-* An und aus: `sound_replace` in `battlezone.ini` oder im Testmenü (Tab)
-  unter SOUND (oder GAME OPTIONS), SOUNDS: ENHANCED oder ORIGINAL. Dort
-  spielt SOUND TEST jede Aufnahme einzeln ab. ORIGINAL ist der Ton der
-  Platine ohne Zutat: keine Aufnahmen, kein Ducking, keine lauteren
-  Melodien (Stereo und Entfernung haben eigene Schalter).
-* Technik: `src/sound/samples.[ch]`, eingehängt in `src/sound/sound.c`.
+* Format: WAV, PCM, 8 or 16 bit, mono or stereo, any rate.
+* On and off: `sound_replace` in `battlezone.ini`, or in the test menu
+  (Tab) under SOUND (or GAME OPTIONS): SOUNDS ENHANCED or ORIGINAL. SOUND
+  TEST there plays every recording on its own. ORIGINAL is the board's
+  sound with nothing added: no recordings, no ducking, no louder tunes
+  (stereo and distance have switches of their own).
+* The volume: the game's `volume`, on top of the cabinet menu's MUSIC
+  VOLUME. The sound goes out as the SDK's stream of a game's own samples
+  (`vp_stream_play`, SDK 0.9; `src/platform/audio.c`), which the SDK
+  counts as music.
+* Code: `src/sound/samples.[ch]`, hooked into `src/sound/sound.c`.
 
-## Melodien und Signale des POKEY (8)
+## The POKEY's tunes and signals (8)
 
-Das Spiel startet sie über `SNDON`. Es läuft immer nur eine: Eine neue
-beendet die laufende. Die Länge ist die des Originals; eine Aufnahme darf
-länger oder kürzer sein.
+The game starts them through `SNDON`. Only one plays at a time: a new one
+ends the one playing. The length is the original's; a recording may be
+longer or shorter.
 
-| Datei | Name im Quelltext | Was | Wann | Länge im Original |
+| File | Name in the source | What | When | Length on the board |
 |---|---|---|---|---|
-| `RBEEP.wav` | RBEEP | Radar-Piep | jedes Mal, wenn der Radarstrahl den Gegner überstreicht | 0,07 s |
-| `BOING.wav` | BOING | Anstoßen | der eigene Panzer fährt gegen ein Hindernis | 0,47 s |
-| `BLKSND.wav` | BLKSND | "Motion blocked" | solange der Panzer am Hindernis hängt, immer wieder neu gestartet | 0,13 s |
-| `BONER.wav` | BONER | Glocke | Bonus-Panzer erreicht | 0,91 s |
-| `WARNG.wav` | WARNG | Warnton | "Enemy in range": ein Gegner taucht auf | 0,59 s |
-| `DISINT.wav` | DISINT | Auflösen | Untertasse getroffen, solange sie zerfällt immer wieder neu gestartet; auch der Slam-Alarm | 0,10 s |
-| `SAUSND.wav` | SAUSND | Untertasse | solange die Untertasse im Bild ist, immer wieder neu gestartet | 0,26 s |
-| `SUPBON.wav` | SUPBON | Fanfare (Ouvertüre 1812) | neuer Highscore, und bei 100.000 Punkten | 2,54 s |
+| `RBEEP.wav` | RBEEP | radar beep | each time the radar's sweep passes the enemy | 0.07 s |
+| `BOING.wav` | BOING | bump | the player's tank runs into an obstacle | 0.47 s |
+| `BLKSND.wav` | BLKSND | "motion blocked" | while the tank is stuck at an obstacle, started again and again | 0.13 s |
+| `BONER.wav` | BONER | bell | a bonus tank | 0.91 s |
+| `WARNG.wav` | WARNG | warning | "enemy in range": an enemy appears | 0.59 s |
+| `DISINT.wav` | DISINT | disintegration | the saucer is hit, started again and again while it comes apart; also the slam alarm | 0.10 s |
+| `SAUSND.wav` | SAUSND | saucer | while the saucer is in the picture, started again and again | 0.26 s |
+| `SUPBON.wav` | SUPBON | fanfare (the 1812 Overture) | a new high score, and at 100,000 points | 2.54 s |
 
-Die drei Sounds, die das Spiel "immer wieder neu startet", beginnt es
-jedes Mal von vorn, sobald der vorige Durchlauf zu Ende ist. Eine Aufnahme
-dafür sollte deshalb etwa so lang sein wie das Original oder sich nahtlos
-wiederholen lassen.
+The game starts the three sounds that come "again and again" from the
+beginning each time the previous one has run out, by the board's length,
+not the recording's (the interrupt starts the next when the board's own
+tune ends). A recording for them should be about as long as the original
+or repeat without a seam. The same holds for BOING: when the player keeps
+pushing, BLKSND cuts it after 0.47 s.
 
-## Rakete (1)
+## Missile (1)
 
-| Datei | Was | Wann |
+| File | What | When |
 |---|---|---|
-| `MISSILE.wav` | das Summen der Rakete (POKEY-Kanäle 3 und 4) | solange die Rakete anfliegt. Die Datei läuft als Schleife, so laut wie das Original gerade ist |
+| `MISSILE.wav` | the missile's buzz (POKEY channels 3 and 4) | while the missile comes in. The file loops, as loud as the original is at the moment |
 
-## Schüsse und Explosionen (4)
+## Shells and explosions (4)
 
-Im Original Rauschen aus diskreten Schaltungen. Die Aufnahme startet in
-dem Moment, in dem die Platine den Sound einschaltet.
+On the board, noise from discrete circuits. The recording starts the
+moment the board switches the sound on.
 
-| Datei | Was | Wann |
+| File | What | When |
 |---|---|---|
-| `SHELL_LOUD.wav` | Schuss, laut | der Spieler feuert |
-| `SHELL_SOFT.wav` | Schuss, leise | der Gegner feuert |
-| `EXPLO_LOUD.wav` | Explosion, laut | der eigene Panzer wird getroffen (die Scheibe springt), Explosion bei der Fanfare |
-| `EXPLO_SOFT.wav` | Explosion, leise | der Gegner wird getroffen, ein Schuss trifft ein Hindernis |
+| `SHELL_LOUD.wav` | shot, loud | the player fires |
+| `SHELL_SOFT.wav` | shot, soft | the enemy fires |
+| `EXPLO_LOUD.wav` | explosion, loud | the player's tank is hit (the screen cracks), the explosion with the fanfare |
+| `EXPLO_SOFT.wav` | explosion, soft | the enemy is hit, a shell hits an obstacle |
 
-## Motor (2)
+## Engine (2)
 
-| Datei | Was | Wann |
+| File | What | When |
 |---|---|---|
-| `ENGINE_IDLE.wav` | Motor im Leerlauf | Schleife, solange das Spiel läuft und der Panzer steht |
-| `ENGINE_REV.wav` | Motor unter Last | Schleife, solange der Panzer fährt oder dreht |
+| `ENGINE_IDLE.wav` | the engine idling | loops while the game runs and the tank stands |
+| `ENGINE_REV.wav` | the engine under load | loops while the tank drives or turns |
 
-Gibt es nur `ENGINE_IDLE.wav`, wird sie beim Fahren schneller abgespielt
-(bis zum 1,6-Fachen). Gibt es beide, werden sie ineinander übergeblendet.
-Der Übergang folgt der Schaltung des Originals: langsam hoch, schnell
-wieder runter. Ohne `ENGINE_IDLE.wav` bleibt der Motor des Originals.
+With only `ENGINE_IDLE.wav`, it plays faster while driving (up to 1.6
+times). With both, they are faded into each other. The change follows
+the original circuit: slowly up, quickly down again. Without
+`ENGINE_IDLE.wav` the original engine stays.
 
-## Abgleich mit MAME
+## The enemy tank's engine (an addition)
 
-Der Ton des Ports ist ein Modell: POKEY und die Analogschaltungen
-(Rauschen, Schuss, Explosion, Motor) in C nachgerechnet, nach MAMEs
-Beschreibung der Platine (`src/sound/sound.c`, `src/sound/pokey.c`).
-Geprüft wird es gegen MAME mit denselben Schreibzugriffen:
-
-```bash
-sh tools/soundcheck.sh
-```
-
-`tools/mame/bzsound.lua` spielt in MAME 75 Sekunden Spiel (Abschüsse,
-Treffer, Raketen, alle acht Melodien, das Raketensummen) und schreibt jeden
-Zugriff auf POKEY und Sound-Latch mit Zeit mit, MAME selbst den Ton
-(`-wavwrite`). `bzsound --replay` spielt dieselben Zugriffe zur selben
-Zeit auf dem Modell. `tools/soundcheck.py` schneidet aus beiden Aufnahmen
-die Stellen, an denen ein Sound allein (mit dem Motor) klingt, und
-vergleicht Pegel (relativ zum Motor im Leerlauf), stärkste Frequenz,
-Helligkeit und für den POKEY das Spektrum in Bändern.
-
-Stand nach dem Abgleich (Modell minus MAME, dB):
-
-| Sound | Pegel | Tonhöhe |
+| File | What | When |
 |---|---|---|
-| Motor Leerlauf | Bezug | 53 Hz gleich |
-| Motor unter Last | -1,2 | 59 Hz gleich |
-| Explosion laut / leise | 0,0 / -0,5 | gleich / 71 statt 58 Hz |
-| POKEY-Melodien | -0,7, alle Bänder bis 12 kHz innerhalb 1,2 | 209 Hz gleich |
-| Raketensummen | -1,1, alle Bänder innerhalb 1,2 | 105 Hz gleich |
-| Schuss laut / leise | +4,2 / -2,2, siehe unten | |
+| `ENEMY_ENGINE.wav` | the enemy tank's engine (not a sound of the board) | loops while an enemy tank lives |
 
-Vor dem Abgleich fehlten den POKEY-Melodien 10 bis 15 dB in den Höhen
-und dem Raketensummen fast 7 dB: Das Modell hatte die Kanäle linear
-addiert und hinter einen festen Filter von 1 kHz gelegt. Der echte POKEY
-zieht seinen Ausgang über ein Widerstandsnetz je Lautstärke-Bit herunter;
-nichtlinear, und der Filter dahinter wird mit der Lautstärke offener.
-Jetzt wird das Takt für Takt so gerechnet wie in MAME (`pokey_run_rc`).
-Das ganze Modell ist außerdem 6 dB lauter als vorher, nahe an MAME (das
-absichtlich bis in die Begrenzung übersteuert).
+`enh_enemy_engine` (test menu SOUND, ENEMY ENGINES; with the enhanced
+sounds only): while an enemy tank lives (`COLFLG+2` is 0; not the missile,
+bit 7 of `R2D3FL`), `ENEMY_ENGINE.wav` loops from his side. It is clearly
+quieter far away, more so than his shot: 1.15 - distance / 22000, at least
+6 percent. When his place changes he is driving: the engine revs up in
+half a second (played faster); when he stands, it goes down again. Fading
+in and out takes a quarter of a second. Without the file the game takes
+the player's engine loops, lower. Code: `bz_sound_place` and the mixer in
+`sound/sound.c`.
 
-**Schuss, eine bewusste Abweichung.** In MAMEs Schaltung stellt das Bit
-der Explosion (D1) die Lautstärke des Schusses ein, nicht das des Schusses
-(D3). Das Originalprogramm nennt D3 aber `LOUDSH` und setzt es, wenn der
-Spieler schießt, und löscht es beim Schuss des Gegners; die Liste der
-Bits von Al Kossow in MAMEs Quelle sagt dasselbe. Der Port folgt dem
-Programm: Der eigene Schuss ist laut, der des Gegners leise. Mit MAMEs
-Verdrahtung (versuchsweise) liegt das Modell auch beim Schuss innerhalb
-0,4 dB, die Schaltung selbst stimmt also.
+## The pack that comes with it
 
-## Die Sounds der Platine als Dateien
+`package/sounds/` (`sounds/` next to the program in a build) holds nine
+sounds: the shots from Battle Zone II (as it is on the owner's cabinet,
+`/persistent/games/bzoneii/sounds`), and explosions, tank engines and the
+obstacle sounds from Freesound recordings, CC0 (free, no attribution
+needed).
 
-`sounds/` im Projektordner enthält alle 15 Sounds, wie das Soundmodell
-des Ports sie erzeugt, unter den Namen aus den Tabellen oben (48 kHz,
-16 Bit, mono). Erzeugt mit:
-
-```bash
-build/pc/bzsound.exe --roms D:/Mame/roms
-```
-
-`bzsound` spielt jeden Sound so ab, wie das Spiel ihn anfordert: die
-Melodien über SNDON und MODSND, bis sie zu Ende sind; Schuss und
-Explosion so lange geschaltet wie im Spiel (4 und 254 bzw. 111
-Interrupts) und dann ausklingend; Raketensummen und Motor je zwei
-Sekunden. Jede Datei ist auf 90 % Vollaussteuerung gebracht (der Sound
-wird dafür ein zweites Mal lauter erzeugt, nicht nachträglich verstärkt).
-`--raw` behält die Pegel der Platine zueinander; dann sind die Melodien
-sehr leise (0,1 bis 1,7 % Aussteuerung), die Geräusche lauter (bis 31 %).
-
-Die Dateien sind ein Ausgangspunkt zum Bearbeiten: Eine geänderte Datei
-unter demselben Namen in `save/sounds/` ersetzt den Sound im Spiel.
-
-Grenzen: Es ist das Modell des Ports, keine Aufnahme eines Automaten,
-abgeglichen mit MAME (oben). Gehört hat sie noch niemand.
-
-## Das mitgelieferte Paket (0.1.9)
-
-`package/sounds/` (im Build `sounds/` neben dem Programm) enthält sieben
-Sounds: die Schüsse aus Battle Zone II (wie es auf dem Automaten liegt,
-`/persistent/games/bzoneii/sounds`), Explosionen und Panzermotoren aus
-Aufnahmen von Freesound, CC0 (frei, ohne Namensnennung).
-
-Battle Zone II: `player_fire.wav` ist der eigene Schuss (auf 2,6 s
-gekürzt, leicht gesättigt, weil er im Mittel leise ist), der Schuss des
-Gegners derselbe, dumpfer und leiser. Die Lizenz ist nicht geklärt: nur
-für den eigenen Automaten, nicht weitergeben. Die Kopien liegen in
-`assets/bzoneii/`. (0.1.9 nahm auch seinen Motor; dem Besitzer klang er
-nicht nach Panzer.)
-
-Die Motoren (0.1.10) sind Schleifen von 8 s aus Aufnahmen echter Panzer:
-`ENGINE_IDLE` der stehende Panzer mit laufendem Motor, `ENGINE_REV` die
-Fahrt mit hochgedrehtem Motor und rasselnden Ketten; das Spiel blendet
-zwischen beiden nach dem Hochdrehen über. `ENEMY_ENGINE` ist der Motor der
-Gegnerpanzer, ein anderer Motor, damit er nicht wie der eigene klingt.
-Jede Schicht ist auf dieselbe Länge geschnitten, ihre Naht mit gleicher
-Leistung überblendet, die Lautstärke über die Schleife ausgeglichen.
-
-Die Explosionen sind aus mehreren Aufnahmen geschichtet: ein heller
-
-Die Explosionen sind aus mehreren Aufnahmen geschichtet: ein heller
-Anschlag, der auf dem Lautsprecher des Automaten durchkommt, darunter
-Körper und Bass. Der tiefste Bass (unter etwa 35 bis 70 Hz) ist
-weggefiltert, eine weiche Sättigung macht sie laut.
-
-| Datei | Was | Länge | aus |
+| File | What | Length | Made from |
 |---|---|---|---|
-| `SHELL_LOUD.wav` | eigener Schuss | 2,6 s | Battle Zone II `player_fire.wav` |
-| `SHELL_SOFT.wav` | Schuss des Gegners: derselbe, dumpfer und leiser | 2,6 s | wie oben |
-| `ENGINE_IDLE.wav` | Motor, Stand (Schleife) | 8 s | 182793, 186934 |
-| `ENGINE_REV.wav` | Motor und Ketten, Fahrt (Schleife) | 8 s | 329800, 186934, 849062, 121531 |
-| `BOING.wav` | Aufprall auf ein Hindernis (0.1.15) | 0,8 s | 151624, 67617, 837389 |
-| `BLKSND.wav` | am Hindernis festhängen: Knirschen, vom Spiel alle 0,138 s neu gestartet | 0,14 s | 336001, 697758, 67617 |
-| `ENEMY_ENGINE.wav` | Motor der Gegnerpanzer (Schleife, kein Sound der Platine) | 8 s | 572294, 187676, 121531 |
-| `EXPLO_SOFT.wav` | Gegner zerstört | 2,6 s | 394128, 490266, 413224, 814052 |
-| `EXPLO_LOUD.wav` | eigener Panzer zerstört | 3,6 s | 873747, 394128, 490266, 814052 |
+| `SHELL_LOUD.wav` | the player's shot | 2.6 s | Battle Zone II `player_fire.wav` |
+| `SHELL_SOFT.wav` | the enemy's shot: the same, duller and softer | 2.6 s | as above |
+| `EXPLO_SOFT.wav` | the enemy destroyed | 2.6 s | 394128, 490266, 413224, 814052 |
+| `EXPLO_LOUD.wav` | the player's tank destroyed | 3.6 s | 873747, 394128, 490266, 814052 |
+| `ENGINE_IDLE.wav` | the engine, standing (loop) | 8 s | 182793, 186934 |
+| `ENGINE_REV.wav` | engine and tracks, driving (loop) | 8 s | 329800, 186934, 849062, 121531 |
+| `ENEMY_ENGINE.wav` | the enemy tanks' engine (loop) | 8 s | 572294, 187676, 121531 |
+| `BOING.wav` | the bump into an obstacle | 0.8 s | 151624, 67617, 837389 |
+| `BLKSND.wav` | stuck at an obstacle: grinding, started by the game every 0.138 s | 0.14 s | 336001, 697758, 67617 |
 
-Die Aufnahmen (Freesound-Nummer, Datei, Urheber):
+* **Shots.** Battle Zone II's `player_fire.wav`, cut to 2.6 s and lightly
+  saturated (it peaks high but is soft on average); the enemy's is the
+  same, duller and softer. Its license is not known. The copies are in
+  `assets/bzoneii/`.
+* **Explosions.** Each layered from several recordings: a bright attack
+  that cuts through on the cabinet's speaker, body and bass under it. The
+  lowest bass (under about 35 to 70 Hz) is filtered away, a soft
+  saturation makes them loud.
+* **Engines.** Loops of 8 s from recordings of real tanks: `ENGINE_IDLE`
+  the tank standing with the engine running, `ENGINE_REV` driving with the
+  engine up and the tracks rattling; the game fades between them as the
+  engine revs. `ENEMY_ENGINE` is another engine, so that it does not sound
+  like the player's. Each layer is cut to the same length, its join faded
+  with equal power, and the level evened out over the loop. They are
+  3 dB under the first version (0.1.10), which was too loud.
+* **Obstacles.** BOING is a heavy metal crash with what counts in its
+  first half second (it is cut after 0.47 s while the player pushes on).
+  BLKSND is 0.138 s of grinding with a small clank at its start: started
+  over and over at the board's pace, a rattle of tracks slipping.
 
+The recordings (Freesound number, file, author):
+
+* 394128 Space Explosion.wav (morganpurkis)
+* 490266 Sci-Fi_Explosion_2.wav (Anomaex)
+* 413224 Energy impact 4 (ihitokage)
+* 814052 Retro Bit Explosion (qubodup)
+* 873747 Low_Mid_End_Void_Energy_Blast_Punch_01 (The_Elementus)
 * 182793 Military Vehicle Humming (qubodup)
 * 186934 engine4_loop.wav (ReadeOnly)
-* 329800 t26_moving_01.wav (greatmganga), ein fahrender T-26
+* 329800 t26_moving_01.wav (greatmganga), a T-26 driving
 * 849062 tracks moving (christerljung)
 * 121531 tracked vehicle.wav (cognito perceptu)
 * 572294 tank_engine.wav (monosfera)
 * 187676 Driving Tank Engine (qubodup)
 * 151624 Clank Car Crash Collision (qubodup)
 * 67617 Metal Crash Collision (qubodup)
-* 837389 Heavy Robot Footsteps (Artem_Zaitsev), ein Schritt als Gewicht
+* 837389 Heavy Robot Footsteps (Artem_Zaitsev), one step as the weight
 * 336001 Metal Grinding Very Slow (Ev-Dawg)
 * 697758 Metal Resonant Scrape Impact (SoundDesignForYou)
-* geladen, nicht verwendet: 332058 Collision (qubodup), 512475 Metallic
-  clunk (michael_grinnell), 569555 Foley_Impact_Metal_Long_Mono (Nox_Sound)
-* 394128 Space Explosion.wav (morganpurkis)
-* 490266 Sci-Fi_Explosion_2.wav (Anomaex)
-* 413224 Energy impact 4 (ihitokage)
-* 814052 Retro Bit Explosion (qubodup)
-* 873747 Low_Mid_End_Void_Energy_Blast_Punch_01 (The_Elementus)
-* für den ersten Schuss von 0.1.9, ersetzt durch den aus Battle Zone II
-  (ohne `--bzoneii` baut das Skript ihn weiter): 702000 Heavy blaster shot
-  05 (xkeril), 728519 Sci fi cannon shot (doudar41), 567308
-  PlasmaCannon.wav (BigDino1995)
-* geladen, nicht verwendet: 569903 ScifiCannon.wav (BigDino1995), 867558
-  sci-fi weapon shot (dimapain); beide fast nur Tiefbass
+* for the first shot (0.1.9), replaced by Battle Zone II's (without
+  `--bzoneii` the script still builds it): 702000 Heavy blaster shot 05
+  (xkeril), 728519 Sci fi cannon shot (doudar41), 567308 PlasmaCannon.wav
+  (BigDino1995)
+* fetched, not used: 569903 ScifiCannon.wav (BigDino1995), 867558 sci-fi
+  weapon shot (dimapain), both nearly all deep bass; 332058 Collision
+  (qubodup), 512475 Metallic clunk (michael_grinnell), 569555
+  Foley_Impact_Metal_Long_Mono (Nox_Sound)
 
-Die Originale liegen in `assets/freesound/`. Neu bauen:
-`python tools/mkfreesound.py assets/freesound --bzoneii assets/bzoneii`
-(braucht numpy und soundfile). Rakete und die acht Melodien bleiben die
-der Platine.
-Eigene Dateien in `save/sounds/` haben Vorrang. `tools/deploy.sh` leert
-`sounds/` auf dem Automaten vor dem Kopieren.
+The originals are in `assets/freesound/`. To make the pack again:
 
-`sound_replace` ist in der Vorgabe an. Abschalten im Testmenü unter SOUND,
-REPLACED SOUNDS. Die errechneten Sounds von `tools/mksounds.py` (auch Motor
-und Rakete) gehören nicht mehr zum Paket; das Skript schreibt nach
-`_scratch/synth`.
+```bash
+python -I tools/mkfreesound.py assets/freesound --bzoneii assets/bzoneii
+```
 
-Pegel im Spiel (60 s am PC, `bzshot`): Motor etwa 1,5 bis 2 dB über dem
-der Platine, der Schuss etwas leiser als die Explosionen, nichts
-übersteuert.
+(needs numpy and soundfile). The missile and the eight tunes stay the
+board's. Your own files in `save/sounds/` come first. `tools/deploy.sh`
+empties `sounds/` on the cabinet before copying.
 
-## Motor der Gegner (0.1.10)
+`sound_replace` is on by default. The computed sounds of
+`tools/mksounds.py` (engine and missile too) are no longer part of the
+pack; the script writes to `_scratch/synth`.
 
-`enh_enemy_engine` (Testmenü SOUND, ENEMY ENGINES; nur mit
-`sound_replace`): Solange ein Gegnerpanzer lebt (`COLFLG+2` ist 0, nicht
-die Rakete: `R2D3FL` Bit 7), läuft `ENEMY_ENGINE.wav` als Schleife von
-seiner Seite. Mit der Entfernung wird er deutlich leiser, stärker als
-sein Schuss: 1,15 − Abstand/22000, mindestens 6 Prozent. Ändert sich
-seine Position, fährt er: Der Motor dreht in einer halben Sekunde hoch
-(schneller abgespielt), steht er, wieder herunter. Ein- und Ausblenden
-dauern eine Viertelsekunde. Fehlt die Datei, nimmt das Spiel die eigenen
-Motorschleifen, tiefer. Code: `bz_sound_place` und der Mischer in
-`sound/sound.c`.
+The levels in the game (60 s on a PC, `bzshot`): the engine about 1.5 to
+2 dB over the board's before the 3 dB cut, the shot a little softer than
+the explosions, nothing clips.
 
-## Lautere Melodien (0.1.12)
+## Louder tunes
 
-Mit ENHANCED sind die Melodien des POKEY (Radar-Piep, Warnton, Glocke,
-Fanfare, Untertasse) 11 dB lauter (`TUNE_BOOST` in `sound/sound.c`), das
-Summen der Rakete nicht. Auf der Platine liegen sie 14 dB unter dem Motor
-und sind trotzdem zu hören, weil der Motor tief brummt; Motor und Ketten
-der Aufnahmen füllen die Mitten, in denen sie liegen, und sie gingen unter.
-Gemessen am PC (60 s Spiel): die Melodien jetzt 4 dB über allem anderen
-in denselben Momenten, vorher 6,5 dB darunter.
+With ENHANCED the POKEY's tunes (radar beep, warning, bell, fanfare,
+saucer) are 11 dB louder (`TUNE_BOOST` in `sound/sound.c`); the missile's
+buzz is not. On the board they are 14 dB under the engine and still
+heard, because its engine is a low hum; the recorded engines and tracks
+fill the middle where the tunes are, and they were lost. Measured on a PC
+(60 s of play): the tunes are now 4 dB over everything else at the same
+moments, before 6.5 dB under.
 
-## Ducking (0.1.11)
+## Ducking
 
-`enh_ducking` (Testmenü SOUND): Solange eine Melodie des POKEY läuft
-(Radar-Piep, Warnton, Glocke ...), ein Schuss oder eine Explosion zu
-hören ist, werden die Motoren, der eigene und der des Gegners, auf 55
-Prozent abgesenkt (5 dB): in 15 ms hinunter, in 0,3 s wieder hinauf. Grund:
-Mit den Panzermotoren gingen die Radar-Sounds unter. Dazu sind die
-Motorschleifen seit 0.1.11 3 dB leiser (`tools/mkfreesound.py`).
+`enh_ducking` (test menu SOUND): while a POKEY tune plays (radar beep,
+warning, bell ...), a shot or an explosion is heard, the engines, the
+player's and the enemy's, go down to 55 percent (5 dB): down in 15 ms, up
+again in 0.3 s. The reason: with the tank engines the radar sounds were
+lost. With ORIGINAL there is no ducking.
 
-## Stereo
+## Stereo and distance
 
-Mit `enh_stereo` kommen Schuss und Explosion des Gegners, das Summen der
-Rakete und die beiden Sounds der Untertasse von der Seite, auf der die
-Quelle steht. Mit `enh_distance` werden sie mit der Entfernung leiser, bis
-auf 30 Prozent; die Explosion des Gegners weniger, bis auf 55 Prozent
-(sie soll auch weit weg noch krachen). Der eigene Schuss, der eigene Treffer, Motor, Radar und
-die übrigen Melodien bleiben in der Mitte. Das gilt für die Sounds der
-Platine und für Aufnahmen gleich.
+With `enh_stereo` the enemy's shot and explosion, the missile's buzz and
+the saucer's two sounds come from the side the source is on. With
+`enh_distance` they are quieter far away, down to 30 percent; the enemy's
+explosion less, down to 55 percent (1.1 - distance / 60000; it should
+still crash far away). The player's shot, the player being hit, the
+engine, the radar and the other tunes stay in the middle. This holds for
+the board's sounds and for recordings alike.
 
-## Offene Punkte
+## Checked against MAME
 
-* Laut und leise bei den Explosionen sind aus dem Quelltext abgeleitet,
-  nicht am Automaten gehört.
-* Aufnahmen sind mono. Stereo wird beim Laden zusammengemischt.
-* Die Lautstärke der Aufnahmen gegenüber den Sounds der Platine ist
-  geschätzt (halbe Vollaussteuerung). Im Spiel am PC liegen Schuss und
-  Explosion etwa 5 dB über dem bisher lautesten Geräusch, ohne Übersteuern.
-* Das Paket von 0.1.9 ist nach Messwerten gemischt, nicht angehört.
-* Mit `--original` werden nur Schüsse, Explosionen, Motor und Rakete
-  ersetzt, die acht Melodien nicht.
+The port's sound is a model: the POKEY and the analog circuits (noise,
+shot, explosion, engine) computed in C, after MAME's description of the
+board (`src/sound/sound.c`, `src/sound/pokey.c`). It is checked against
+MAME with the same writes:
+
+```bash
+sh tools/soundcheck.sh
+```
+
+`tools/mame/bzsound.lua` plays 75 seconds of the game in MAME (hits,
+being hit, missiles, all eight tunes, the missile's buzz) and records
+every write to the POKEY and the sound latch with its time; MAME itself
+records the sound (`-wavwrite`). `bzsound --replay` plays the same writes
+at the same times on the model. `tools/soundcheck.py` cuts from both the
+places where a sound is heard alone (with the engine) and compares the
+level (against the engine idling), the strongest frequency, the
+brightness and, for the POKEY, the spectrum in bands.
+
+After the match (model minus MAME, dB):
+
+| Sound | Level | Pitch |
+|---|---|---|
+| engine idling | reference | 53 Hz, the same |
+| engine under load | -1.2 | 59 Hz, the same |
+| explosion loud / soft | 0.0 / -0.5 | the same / 71 instead of 58 Hz |
+| POKEY tunes | -0.7, every band up to 12 kHz within 1.2 | 209 Hz, the same |
+| missile buzz | -1.1, every band within 1.2 | 105 Hz, the same |
+| shot loud / soft | +4.2 / -2.2, see below | |
+
+Before the match the POKEY's tunes lacked 10 to 15 dB in the highs and
+the missile's buzz nearly 7 dB: the model had added the channels linearly
+and put them behind a fixed 1 kHz filter. The real POKEY pulls its output
+down through a network of resistors, one per volume bit; not linearly,
+and the filter behind it opens with the volume. It is now computed tick
+by tick as in MAME (`pokey_run_rc`). The whole model is also 6 dB louder
+than before, close to MAME (which on purpose drives it into clipping).
+
+**The shot, a deliberate difference.** In MAME's circuit the explosion's
+bit (D1) sets the shot's volume, not the shot's own (D3). The original
+program calls D3 `LOUDSH`, sets it when the player fires and clears it
+for the enemy's shot; Al Kossow's list of the bits in MAME's source says
+the same. The port follows the program: the player's shot is loud, the
+enemy's soft. With MAME's wiring (tried) the model is within 0.4 dB for
+the shot too, so the circuit itself is right.
+
+## The board's sounds as files
+
+`sounds/` in the project folder holds all 15 sounds as the port's sound
+model makes them, under the names of the tables above (48 kHz, 16 bit,
+mono). Made with:
+
+```bash
+build/pc/bzsound.exe --roms D:/Mame/roms
+```
+
+`bzsound` plays each sound as the game asks for it: the tunes through
+SNDON and MODSND until they end; shot and explosion switched on as long as
+in the game (4 and 254 or 111 interrupts) and then dying away; the
+missile's buzz and the engine two seconds each. Every file is brought to
+90 % of full scale (the sound is made a second time, louder, not
+amplified afterwards). `--raw` keeps the board's levels to each other;
+then the tunes are very quiet (0.1 to 1.7 % of full scale), the noises
+louder (up to 31 %).
+
+The files are a starting point for editing: a changed file of the same
+name in `save/sounds/` replaces the sound in the game.
+
+Limits: it is the port's model, not a recording of a cabinet, matched
+with MAME (above).
+
+## Open points
+
+* Loud and soft for the explosions are taken from the source code, not
+  heard on a cabinet.
+* Recordings are mono; stereo files are mixed down when loaded.
+* The level of the recordings against the board's sounds is a guess (half
+  of full scale). In the game on a PC the shot and the explosion are about
+  5 dB over the loudest sound before, without clipping.
+* The pack is mixed by measurements; on the cabinet the owner has heard
+  and judged it step by step (shot, engines, ducking, tunes).
+* With `--original` only shots, explosions, engine and missile are
+  replaced, not the eight tunes.
+* The game's sound counts as music for the cabinet menu's volumes (the
+  SDK's rule for a game's own stream): MUSIC VOLUME sets it, SOUND VOLUME
+  does not.

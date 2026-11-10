@@ -1,590 +1,526 @@
 # Status
 
-Stand: 2026-10-17, Version 0.1.20 (Credit ENHANCED BY ENDPRODUKT, Farben nur unter PICTURE)
+State: 2026-11-10, version 0.2.0 (VectorPie SDK 0.9; the sound through
+the SDK's stream, so the cabinet menu's volume applies; all documentation
+in English).
 
-## Ziel
+## Goal
 
-Battlezone (Atari, 1980) vollständig und unverändert in C, geprüft gegen
-MAME. Danach: sehr flüssige Darstellung, besserer Ton, Farbvektoren.
+Battlezone (Atari, 1980) complete and unchanged in C, checked against
+MAME. Then: a very smooth picture, better sound, color vectors.
 
-Der erste Teil ist erreicht: Das ganze Spielprogramm liegt in C vor und
-stimmt in allen Aufnahmen mit MAME überein. Flüssige Darstellung, Farbe,
-gespeicherte Highscores, drei Eingabearten mit freier Belegung und das
-Testmenü sind dazugekommen. Der Ton steht noch aus.
+All of it is there: the whole game program is in C and agrees with MAME
+in every capture. A smooth picture, color, solid objects, a ground grid,
+kept high scores, three ways to drive at once with free bindings, the test
+menu and a new sound pack have been added; the owner plays it on the
+cabinet and has tuned picture and sound step by step (see the history
+below).
 
-## Was läuft
+## What runs
 
-Das Spiel als C-Programm (`src/game`, 5.000 Zeilen), Routine für Routine
-nach dem Quelltext von 1980/81:
+The game as a C program (`src/game`, 5,000 lines), routine by routine
+after the source code of 1980/81:
 
-* Hauptschleife, Fensteraufbau, Berge, Mond und Vulkan mit Steinen
-* Auswahl der sichtbaren Objekte, Projektion über die Math Box, Zeichnen
-  aller Objekte (Panzer, Super-Panzer, Rakete, Untertasse, Hindernisse,
-  Schüsse, Trümmer, Explosionen, Logo)
-* Spieler: beide Hebel, Feuer, Anstoßen an Hindernisse, Zurückprallen
-* Gegner: Panzer mit Zielen, Ausweichen, Angriff, Rückzug nach Kollision;
-  Super-Panzer; Rakete mit Anflug in Schlangenlinie; Untertasse
-* Radar, Fadenkreuz, Meldungen in vier Sprachen, Punkte, Bonus-Panzer,
-  Super-Bonus bei 100.000
-* gesprungene Scheibe, Spielende, Highscore-Seite, Eingabe der Initialen
-* Interrupt: Münzen mit allen Münzmodi und Bonus-Münzen, Credits, Start,
-  Sound-Ablauf (POKEY-Melodien, Sound-Latch), Wechsel der Displaypuffer
-* Einschaltzustand (PWRON, soweit er ins Spiel führt)
+* main loop, window, mountains, moon and the volcano with its rocks
+* choosing the objects in view, projection through the math box, drawing
+  every object (tank, super tank, missile, saucer, obstacles, shells,
+  wreck, explosions, logo)
+* player: both levers, fire, running into obstacles, bouncing back
+* enemies: tanks with goals, evading, attacking, backing off after a
+  collision; super tank; the missile's weaving approach; the saucer
+* radar, sights, messages in four languages, score, bonus tank, the super
+  bonus at 100,000
+* the cracked screen, game over, the high score page, entering initials
+* interrupt: coins with every coin mode and bonus coins, credits, start,
+  the sound sequence (POKEY tunes, sound latch), changing the display
+  buffers
+* the power-on state (PWRON, as far as it leads into the game)
 
-Im normalen Betrieb läuft kein 6502.
+In normal use no 6502 runs.
 
-Als Bausteine nachgebildet: Math Box, Vektorgenerator mit dem
-Fenster-Schaltkreis der Battlezone-Platine, POKEY, die diskreten Sounds.
+Rebuilt as parts: the math box, the vector generator with the Battlezone
+board's window circuit, the POKEY, the discrete sounds.
 
-`battlezone --original` lässt zum Vergleich das Originalprogramm auf einem
-eigenen 6502-Kern laufen.
+`battlezone --original` runs the original program on a 6502 core of its
+own, to compare.
 
-## Was der Port hinzufügt
+## What the port adds
 
-Die Spielmechanik ist unverändert. Alle Vergleiche gegen MAME sind nach
-diesen Ergänzungen weiter vollständig gleich.
+The game's mechanics are unchanged. Every comparison against MAME is still
+completely the same after these additions.
 
-* **Flüssiges Bild.** Nach jedem Frame wird das Bild des nächsten
-  vorausgezeichnet, dazwischen wandern die Linien der Welt. Am Fenster
-  60 Bilder pro Sekunde, abschaltbar (`smooth`).
-* **Farbe.** Zwei Paletten. Vorgabe ist die nach Ataris Flyer: Berge
-  eisweiß über blauem Horizont und blauem Gitter, Mond orange,
-  Hindernisse blau und violett, Super-Panzer rot, Rakete gelb, Visier,
-  Punkte und Logo gelb und orange, Warnungen rot, Tabelle als Verlauf von
-  gelb nach rot. Die erste Palette (Land grün) bleibt wählbar, ebenso
-  Farbfolie und Weiß. Standard-Panzer und Lebensanzeige sind in beiden
-  Paletten grün wie am Automaten. Bilder in `docs/bilder`.
-* **Massive Objekte.** Rückseiten und alles hinter einem Objekt werden
-  nicht gezeichnet. Abschaltbar (`occlusion`).
-* **Bodengitter** in der Perspektive des Spiels, von Objekten verdeckt.
-  Abschaltbar (`ground_grid`).
-* **Sound-Ersatz.** 15 Sounds, jeder einzeln durch eine WAV-Datei
-  ersetzbar, abschaltbar (`sound_replace`). Liste in `docs/SOUNDS.md`.
-  Aufnahmen liegen noch keine bei.
-* **Highscores** in `save/hiscore.bin`, alle zehn Zeilen.
-* **Eingabe.** Ein Joystick, zwei Joysticks, analoges Yoke mit stufenloser
-  Geschwindigkeit. Jede Aktion frei auf Taste, Knopf, Achse oder Hut.
-* **Testmenü auf Tab**: Steuerung, Bild, Ton mit Sound-Test,
-  Spieloptionen, Highscores zurücksetzen, Kalibrierbild.
-* **Enhanced-Optionen**, jede einzeln schaltbar (Tabelle im README):
-  Explosionsglühen, Entfernungsdunst, Sterne, Vulkan-Glühen,
-  Mündungsblitz und Staub, Kettenspuren, feineres Gitter, erweitertes
-  Radar, Pfeil zum Gegner, Hebelanzeige, Stereo nach Richtung, leiser mit
-  Entfernung, Motor nach Hebelweg, Tempo des Automaten, Menü über Start
-  und Feuer oder eigenen Knopf, START-Lampe.
-* **Sound-Paket** für Schüsse, Explosionen, Motor und Rakete, errechnet,
-  in der Vorgabe aus.
+* **Smooth picture.** Pictures between the game's 15 frames a second,
+  computed from the game's state as in the Star Wars port (`smooth = 1`),
+  or the lines of a frame moved to the next (`smooth = 2`). 60 pictures a
+  second in a window, 50 on the board (`board_hz`).
+* **Color.** The flyer's colors (the default): a blue ground and horizon,
+  lilac mountains, the four obstacle shapes from cyan to magenta, an
+  orange moon, a red super tank, a yellow missile, a magenta saucer,
+  sights, score and logo yellow and orange, warnings red, the high score
+  table from yellow to red. Also the first palette, the cabinet's overlay
+  (ORIGINAL: all green, the top red) and white. The standard tank and the
+  tanks left are green in the palettes, as on the cabinet. Pictures in
+  `docs/images`.
+* **Solid objects.** Back faces and whatever is behind an object are not
+  drawn (`occlusion`).
+* **Ground grid** in the game's perspective, hidden by objects, to 24000
+  units, coming out of the dark without steps (`ground_grid`).
+* **Sounds.** Every one of the 15 can be replaced by a WAV file; a pack
+  comes with it (a shot, explosions, tank engines, the enemy's engine, the
+  obstacle sounds), on by default (`sound_replace`, in the menu SOUNDS
+  ENHANCED or ORIGINAL). docs/SOUNDS.md.
+* **High scores** in `save/hiscore.bin`, all ten rows, and as
+  `save/highscores.txt` for the cabinet's menu and marquee.
+* **Controls.** One joystick, two joysticks and a yoke at once; every
+  action bound freely, to several controls.
+* **The test menu on Tab**: controls, picture, sound with a sound test,
+  game options, resetting the high scores, the calibration picture.
+* **Enhanced options**, each switchable (table in the README): sparks,
+  stars, the far mountain row with parallax, the glowing volcano, the
+  muzzle flash and dust, the lever gauges, stereo, quieter far away, the
+  enemy's engine, ducking, the engine following the levers, the cabinet's
+  pace, the menu through start and fire or a button of its own, the START
+  lamp.
+* **The credit** "ENHANCED BY ENDPRODUKT" under Atari's copyright line in
+  the attract mode.
 
-## Geprüft
+## Checked
 
-Gegen MAME 0.289, Satz `bzonea`, 16 Aufnahmen (`tools/captures.sh`):
-Attract-Modus, gespielte Partien mit Abschüssen und Toden, Rakete (auch von
-hinten und außer Reichweite), Super-Panzer, Untertasse, Bonus-Panzer bei
-15.000 und 50.000, Super-Bonus, Spielende mit Highscore-Eingabe, Deutsch,
-Französisch, Spanisch, Freispiel, 2 Spiele je Münze mit Bonus-Münzen,
-2 Münzen je Spiel.
+Against MAME 0.289, set `bzonea`, 16 captures (`tools/captures.sh`):
+attract mode, games played with hits and deaths, the missile (also from
+behind and out of range), super tank, saucer, bonus tank at 15,000 and
+50,000, the super bonus, game over with entering initials, German, French,
+Spanish, free play, 2 games a coin with bonus coins, 2 coins a game.
 
-| Prüfung | Umfang | Ergebnis |
+| Check | Extent | Result |
 |---|---|---|
-| C-Routinen, Frame für Frame (`bzcompare`) | 70.120 Frames | alle gleich |
-| Originalprogramm auf dem 6502-Kern (`bzcompare --emu`) | 70.120 Frames | alle gleich |
-| Interrupt-Routine in C gegen das Original auf dem Kern (`bznmi`) | 1.124.000 Interrupts, darunter Münzen, Slam, Spielstarts | alle gleich |
-| Einschaltzustand in C gegen das Original (`bznmi`) | RAM, Vektor-RAM, POKEY-Register | gleich |
-| `test_core` (ohne ROMs) | 6502-Kern, Math Box, Vektorgenerator, Makros, Highscore-Datei | bestanden |
-| Vorausgezeichnetes Bild gegen das nächste Bild des Spiels (`bzshot`) | 448 Frames mit Drehen und Fahren | 0,23 Einheiten Abstand je Linie im Mittel, 0,14 % ohne Partner |
-| Gleichmäßigkeit beim Drehen auf 60 Hz (`bzshot`) | 1.325 Bilder | geglättet 1,6 % Stillstand und 1,2 % Sprünge, ungeglättet 74,5 % und 25,5 % |
-| Analoger Modus an den Anschlägen gegen die Hebelschalter (`tools/checkanalog.sh`) | alle acht Bewegungen | gleiche Position und Richtung |
-| Verdeckung und Bodengitter am Bild (`bzshot`, `docs/bilder`) | Pyramiden, Kisten, Panzer nah und fern, mit `--nosolid` zum Vergleich | Rückseiten, Berge und Gitter hinter Objekten fehlen, Vorderkanten bleiben |
-| Sound-Ersatz mit Testtönen (`bzshot --sounds`) | 60 s Spiel, 8 ersetzte Sounds | Radar-Piep 38-mal, Schuss 5-mal, Explosionen 3-mal, Warnton 4-mal, Anstoßen 3-mal gestartet |
-| Enhanced-Optionen am Bild (`bzshot`, `docs/bilder`) | Sterne, Radarpunkte, Pfeil, Mündungsblitz, Spuren, Hebelanzeige, Vulkan | im Bild zu sehen und an der richtigen Stelle |
-| Tempo des Automaten (`bzshot --pace`) gegen MAME | 150 s Attract, 150 s Spiel | 14,62 gegen 14,69 und 14,77 gegen 14,8 bis 15,0 Frames pro Sekunde |
-| Stereo (`bzshot --wav`) | 60 s Spiel | zwei Kanäle, links und rechts unterscheiden sich in 13 % der Samples |
-| Fenster und Testmenü über Tastenskript und Bildschirmfoto | Menüseiten, Wechsel der Eingabeart, Taste belegen, Highscores zurücksetzen und beim Start laden | funktioniert |
-
-Verglichen wird nach jedem Frame jedes Byte von RAM und Vektor-RAM und
-alle Register der Math Box. Auch jede Zufallszahl und jeder Lesezugriff
-auf die Schalter muss an derselben Stelle kommen.
-
-Abdeckung der C-Routinen durch die Aufnahmen (`tools/coverage.sh`):
-`play.c` 99,8 %, `view.c` 99,7 %, `mainline.c` 98,3 %, `nmi.c` 100 %,
-`sound.c` 100 %, `coin.c` 98,7 %, `vgut.c` 90,5 %. Nicht durchlaufen werden
-nur `bz_main_poll` (die Warteschleife des Live-Betriebs), der unbenutzte
-Zeichenbefehl `D.SLIM` und drei Routinen aus VGUT, die Battlezone nie
-aufruft (`VGRTSL`, `VGJMPL`, `VGSTA1`).
-
-Am Bild geprüft: `bzshot` schreibt die Displayliste als SVG. Attract-Bild
-und Spielbild sehen aus wie MAMEs Bildschirmfoto (Ausschnitt, Horizont,
-Radar, Fadenkreuz, Texte).
-
-## Noch von niemandem gesehen oder gehört
-
-* **Das Spielfenster in Bewegung.** Standbilder des Fensters und des Menüs
-  sind geprüft, die Gleichmäßigkeit ist gemessen. Gespielt hat es noch
-  niemand.
-* **Joysticks und Yoke.** Belegen und Lesen von Knöpfen, Achsen und Hüten
-  ist geschrieben, aber nur mit der Tastatur ausprobiert. Der analoge
-  Modus ist nur über Skript gefahren.
-* **Eintrag in die Highscore-Tabelle im Fenster.** Laden, Speichern und
-  Zurücksetzen sind geprüft. Dass nach der Eingabe von Initialen
-  gespeichert wird, ist nur aus dem Code geschlossen.
-* **Explosionsglühen, Staub und Dunst.** Im Code und im Farbweg
-  eingebaut, aber in keinem der geprüften Bilder gezeigt, weil das
-  Testskript keinen Abschuss schafft.
-* **Stereo, Entfernung, Motor nach Hebelweg, Sound-Paket.** Nur gemessen,
-  nie gehört. Ob links und rechts richtig herum sind, ist aus der
-  Projektion abgeleitet.
-* **Kalibrierbild.** Es wird gezeigt. Das Verstellen von Größe, Lage und
-  Helligkeit ist ungeprüft.
-* **Menü über Start und Feuer, eigener Menüknopf, START-Lampe.** Ungeprüft.
-* **Der Sound-Ersatz.** Die Aufnahmen starten nachweislich an den
-  richtigen Stellen. Gehört hat das Ergebnis niemand, auch nicht die
-  Motor-Schleife mit ihrer Tonhöhe und den Sound-Test im Menü.
-* **Verdeckung und Gitter in Bewegung.** An Standbildern geprüft. Ob
-  Kanten beim Drehen flackern, ist ungesehen.
-* **Der Ton.** Gegen MAME abgeglichen (docs/SOUNDS.md), aber von
-  niemandem am Automaten gehört.
-* **Das Spiel am Automaten.** Es ist dort installiert und läuft: ROMs
-  gefunden, USB-DVG, 45 Bilder pro Sekunde, rund 400 Linien, kein Fehler
-  im Protokoll. Gesehen hat das Bild auf der Röhre noch niemand. Ob es mit
-  Gitter, Sternen und Spuren ruhig steht, ob Lage und Größe passen und ob
-  die Steuerung des Automaten wie erwartet belegt ist, ist offen.
-
-## Bekannte Abweichungen vom Automaten
-
-* **Tempo.** Der Automat rechnet 14,7 bis 15,1 Frames pro Sekunde und
-  wird in vollen Szenen langsamer, weil sein 6502 für einen Frame bis zu
-  102.000 Zyklen braucht (16 Interrupts sind 98.304). Die C-Routinen
-  brauchen keine Zeit: Sie laufen immer mit 15,3 Frames pro Sekunde, also
-  1 bis 4 % schneller und ohne Schwanken. Wer das Tempo des Automaten
-  exakt will, braucht ein Zeitmodell wie `pace.c` im Star-Wars-Port.
-  Offen ist, was gewünscht ist.
-* **Revision.** Das Verhalten ist immer Revision 1 (`bzonea`), auch mit
-  dem ROM-Satz `bzone`. Revision 2 ändert die Highscore-Seite.
-* **Zufallszahlen.** Im Live-Betrieb kommen sie aus einem eigenen
-  Schieberegister, nicht aus einem zyklusgenauen POKEY. Die Folge ist eine
-  andere als in MAME, das Verhalten dasselbe.
-* **Math Box.** Nachgebildet auf Routinen-Ebene wie in MAME, nicht als
-  Mikrocode. Sie ist sofort fertig. Der Mikrocode-Quelltext (MBUCOD.V05)
-  und die PROMs liegen vor, eine Nachbildung auf Mikrocode-Ebene wäre
-  möglich.
-* **Vektorgenerator.** Die Zeit, die er für ein Bild braucht (Halt-Flag),
-  ist nur angenähert. Das Spiel selbst fragt sie nicht ab.
-
-## Nicht portiert
-
-* Der Selbsttest der Platine (BZSTST.MAC ab `RAMTST`: RAM-, ROM- und
-  Math-Box-Test, Schaltertest, Diagnosebilder) und das Diagnoseprogramm
-  BZSADG.MAC. Sie prüfen Hardware, die es hier nicht gibt. Mit
-  `--original` laufen sie auf dem 6502-Kern (Testschalter: IN0 Bit 4, im
-  Programm noch nicht auf eine Taste gelegt).
-* Die Schutzmechanismen gegen Abstürze (Stack-Prüfung und Sync-Prüfung im
-  Interrupt, Watchdog) haben hier nichts zu schützen und fehlen.
-* Die Kopierschutz-Prüfung (`TRAP1`, `TRAP2`: Prüfsumme über den
-  Copyright-Text in der Displayliste) ist portiert und rechnet wie im
-  Original.
-
-## Am Automaten gemeldet und behoben (0.1.1)
-
-* **Spielbild schmaler als das Justagebild.** Der gezeigte Ausschnitt war
-  der von MAME (580 mal 400 Einheiten, mit schwarzem Rand um das Spiel).
-  Jetzt ist es das Fenster des Spiels selbst, 512 mal 384, genau 4:3.
-  Justagebild und Spielbild sind damit gleich breit.
-* **Bewegung hakelig, Objekte halten kurz an und fahren weiter.** Ursache
-  war nicht der Zeitplan, sondern das Spiel: Es rundet die Bildposition
-  jedes Objektpunkts auf ein Raster von einer halben Einheit ab. Ein fernes
-  Objekt steht deshalb mehrere Frames still und springt dann. Die
-  Zwischenbilder haben dieses Anhalten nur weich nachgezeichnet. Jetzt
-  werden die Punkte ungerundet genommen, aus dem, was die Math Box
-  dividiert (`bz_avg_exact`). In der Simulation bewegt sich ein Objekt
-  seither gleichmäßig. Zusätzlich beginnt jedes Zwischenbild exakt eine
-  Periode nach dem vorigen.
-* **Der Boden baut sich vor einem auf.** Das Gitter hatte fünf
-  Helligkeitsstufen, und die feineren Linien erschienen auf halber
-  Strecke schlagartig. Jetzt kommen alle Linien stufenlos aus dem Dunkel
-  und werden zum Spieler hin heller.
-
-Am Automaten gemessen nach dem Update (`run.log`, Zeile "battlezone
-pace"): Bilder 21,8 bis 23,1 ms auseinander, 15 bis 16 Frames des Spiels
-pro Sekunde, kein Bild musste auf seinen Frame warten. Gesehen hat das
-Ergebnis noch niemand.
-
-## Bekannte Grenzen der Ergänzungen
-
-* **Verdeckung.** Flächen entstehen nur aus Ringen von höchstens acht
-  Linien, die in einer Ebene liegen. Das Logo hat keine solchen Flächen
-  und verdeckt nichts. Ragt ein Objekt aus dem Bild und fehlt ein Punkt
-  einer Fläche, verdeckt diese Fläche nichts.
-* **Bodengitter.** Es wippt beim Anstoßen nicht mit. Es verdoppelt etwa
-  die gezeichnete Linienlänge, was auf der Vektorplatine zählt.
-* **Sound-Ersatz.** Lautstärke der Aufnahmen gegenüber der Platine
-  geschätzt. Mit `--original` werden die acht Melodien nicht ersetzt.
-
-* **Zwischenbilder.** Linien werden zwischen zwei Bildern geradeaus
-  verschoben, nicht neu projiziert. Gemessen ist der Fehler klein. Sehr
-  nahe Objekte beim schnellen Drehen könnten leicht verzerrt wirken.
-* **Zwischenbilder nur mit den C-Routinen.** `--original` zeigt die 15
-  Frames des Originals, in Farbfolie statt Farbe.
-* **Analog mit `--original`.** Das Originalprogramm kennt nur Schalter.
-  Das Yoke gilt dort ab halbem Weg als gedrückter Hebel.
-* **Tempo des Automaten.** Ein Modell, kein Mitlauf des Originals. Es
-  trifft MAMEs Bildrate auf etwa 1 Prozent. Die Wartezeit eines Frames ist
-  die Dauer des vorigen, der Fehler wird im nächsten ausgeglichen.
-* **Kettenspuren und Sterne** kosten auf der Vektorplatine Linien. Dort
-  prüfen, ob das Bild ruhig bleibt.
-* **START-Lampe** nur am Automaten, weil sie am PC die NUM-Taste der
-  Tastatur schalten würde.
-* **Esc beendet das Programm**, auch im Menü. Nur beim Belegen bricht Esc
-  die Belegung ab.
-
-## Offene Punkte
-
-1. Spielen, Ton anhören, Joysticks und Yoke ausprobieren (siehe oben).
-2. Farben weiter abstimmen.
-3. Neue Sounds (0.1.9, 0.1.10: Schuss, Explosionen, Motoren) am Automaten anhören und nachbessern.
-4. Ton verbessern.
-5. Menüknopf, Start-und-Feuer-Halten und START-Lampe am Automaten
-   ausprobieren.
-7. Namen der Hebel-Aktionen (`p1_doubleleft_up` usw.) gegen eine echte
-   `advmame.rc` prüfen.
-8. Am Automaten: Bild ansehen, kalibrieren, Steuerung prüfen. Paket:
-   `tools/make_vpk.sh`; 0.1.20 liegt im Drive-Ordner "games".
-9. Kein Git-Repository angelegt, nichts committet.
-10. Aufräumen: `_scratch/shots/a` und `_scratch/shots/p` enthalten alte
-    Testbilder. Das Löschen wurde von der Sicherheitsprüfung abgelehnt.
-
-## Nächste Schritte
-
-Siehe [RESUME.md](RESUME.md), Abschnitt "Nächste Schritte".
-
-## Paket 0.1.20 im Drive (2026-10-17)
-
-`tools/make_vpk.sh` (nach dem von Red Baron Enhanced) macht
-`build/bzenhanced-0.1.20.vpk` (4,5 MB: Pi-Programm, game.ini,
-battlezone.ini, Marquee, neun Sounds, `sounds/CREDITS.txt`; keine ROMs;
-Programm und Ordner 755, sonst 644). Hochgeladen in den geteilten
-Google-Drive-Ordner "games" (neben rbenhanced, swenhanced). Auf Wunsch
-des Besitzers mit dem Schuss aus Battle Zone II, obwohl dessen Lizenz
-unbekannt und der Ordner öffentlich ist (in CREDITS.txt vermerkt). Mit
-INSTALL GAMES installiert hat es noch niemand.
-
-## Farben nur unter PICTURE, Credit (0.1.20, installiert 2026-10-17)
-
-COLORS steht nicht mehr auch auf GAME OPTIONS, nur noch unter PICTURE
-(SOUNDS bleibt auf beiden). Unter dem "(C)(P) ATARI 1980" des
-Attract-Modus steht "ENHANCED BY ENDPRODUKT", in derselben Farbe, etwas
-kleiner (`main.c`, nach `bz_draw_lines`). Bild:
-`docs/bilder/credits-endprodukt.png`.
-
-## Kein Dunst, Gitter ohne Stufen, Sterne mit dem Mond (0.1.19, installiert 2026-10-16)
-
-Dunst in der Ferne (`enh_haze`) ganz entfernt, auf Wunsch ("das ist
-scheiße"); die Einstellung wird überlesen.
-
-Gitter "lebt vor der Nase": Es wurde in acht festen Helligkeitsstufen
-abgeblendet, deren Grenzen in fester Entfernung zum Panzer liegen. Eine
-Querlinie, die beim Fahren näher kommt, wurde an jeder Grenze eine Stufe
-heller. Jetzt hat jedes Stück die Helligkeit seiner eigenen Mitte
-(`lit_at` in `render/ground.c`), stufenlos. (Geprüft und ausgeschlossen:
-das Abschneiden bei 700 Einheiten liegt unter dem unteren Bildrand.)
-
-Sterne: Sie liefen mit echter Perspektive (0,049 Einheiten je
-Winkelschritt), Mond und Berge des Spiels aber mit 0,031; die Sterne
-zogen 57 % schneller am Mond vorbei. Logisch drehen alle unendlich fernen
-Dinge gleich schnell: Die Sterne laufen jetzt mit dem Mond (`MOUNT_RATE`),
-gemessen 1,99 Einheiten je Bild bei beiden. 100 statt 150 Sterne, gleich
-viele zu sehen. Die hintere Bergreihe bleibt bewusst halb so schnell
-(Parallaxe, 0.1.16).
-
-## Belegung auf NONE (0.1.18, deployt 2026-10-16)
-
-Gewünscht: eine Eingabe auch auf NONE setzen können. Links/rechts auf
-einer Belegungszeile: eigene Belegungen zurück auf AUTO, AUTO auf NONE,
-NONE wieder auf AUTO. Eine neue Taste auf NONE ersetzt es. Am PC geprüft
-(bind_up = none; FIRE none, dann X: "key X").
-
-## Bis zu acht Belegungen (0.1.17, deployt 2026-10-16)
-
-Gemeldet: "Alt left wird als Taste nicht erkannt." Ursache: Feuer hatte
-auf dem Automaten schon vier Belegungen (auto, Left Shift, Space, Left
-Ctrl), die Grenze war vier, eine neue ersetzte dann die letzte. Die
-advmame.rc des Automaten legt Battlezone-Feuer auf vier Tasten (Shift,
-Space, Ctrl, Alt). Jetzt bis zu acht (`BZ_BIND_ALTS`, `BZ_BIND_SIZE` 320).
-Am PC geprüft: Left Alt lässt sich belegen und wird gespeichert.
-
-## Gitter weiter, hintere Bergreihe mit Parallaxe (0.1.16, deployt 2026-10-16)
-
-Gewünscht: Das Bodengitter weiter zeichnen (es flackert nicht), und die
-zweite Bergreihe soll sich parallax zur vorderen bewegen. Gitter: bis
-24000 statt 15000 Einheiten (`FAR` in `render/ground.c`); 30000 kostete
-die Hälfte mehr gezeichnete Länge und war im Bild kaum anders. Am
-Automaten (Attract-Modus): gezeichnet ~85000 statt ~70000 Einheiten je
-Bild, mit Dunkelweg bis ~169000 in der Spitze, 50,0 Bilder/s, kein Bild
-stehen geblieben. Grenze von früher: um 170000 stockte es; im vollen
-Gefecht beobachten, sonst `FAR` zurück auf etwa 20000.
-
-Parallaxe: Die hintere Reihe lief mit 0,029 Schirmeinheiten je
-Winkelschritt fast so schnell wie die vordere des Spiels (0,031: 0,996
-alle 32 Schritte), also ohne sichtbare Parallaxe. Jetzt halb so schnell
-wie die vordere (`PARALLAX` in `render/enhance.c`), die Ecken weniger
-(52 statt 96), damit die Silhouette gleich breit bleibt.
-
-## Neues Marquee (2026-10-16)
-
-Vom Besitzer: "Battlezone Enhanced"-Marquee (Flyer-Motiv mit Schriftzug
-ENHANCED), 2000 × 491, als `package/marquee.png` übernommen (vorher 1920 ×
-360, Kopie in `_scratch/marquee-alt/`). Das SDK passt es an
-(`vector_aux_marquee_display_mode` in advmame.rc). Auf dem Automaten.
-
-## Neuer Sound gegen Hindernisse (0.1.15, deployt 2026-10-16, noch nicht gehört)
-
-Gemeldet: Gegen Hindernisse fahren klang noch original. Das sind zwei
-Melodien des POKEY: BOING beim Aufprall, BLKSND solange der Panzer
-festhängt (das Interrupt startet es neu, sobald der Original-Ton nach 34
-Interrupts endet; der Ersatz läuft also im Takt des Originals, und BOING
-wird beim Weiterdrücken nach 0,47 s abgeschnitten). Jetzt: BOING ein
-schwerer Metall-Crash, BLKSND 0,138 s Knirschen mit kleinem Klack, das
-wiederholt nach rutschenden Ketten rattert (`tools/mkfreesound.py`,
-`obstacles`; Aufnahmen in `docs/SOUNDS.md`). Hörprobe:
-`_scratch/hoerprobe3/gegen-hindernis.wav`.
-
-## Highscores im Menü und auf dem Marquee (0.1.14, installiert 2026-10-16)
-
-Gemeldet: Das Marquee zeigt bei Vectortron Highscores, bei uns nicht.
-Grund: `hiscores = no` in `game.ini`, und unsere Tabelle lag nur als
-`save/hiscore.bin` vor. Das Menü des Automaten liest `save/highscores.txt`
-(`NAME PUNKTE`, bis zehn Zeilen, vp_hiscore.h). Jetzt schreibt das Spiel
-diese Datei beim Start, bei jedem neuen Eintrag und beim Zurücksetzen
-(`bz_hiscore_save_text`; Initialen aus dem Alphabet des Vektor-ROMs:
-16..48 A..Z, 02..14 Ziffern, 00 und 4A Leerzeichen; Punkte BCD in
-Tausendern), und `game.ini` sagt `hiscores = yes`. Am PC geprüft
-(Einschalttabelle EDR, MPH, JED ... je 5000). Auf dem Automaten lief Time
-Pilot 3D: installiert, nicht gestartet; die Datei einmal aus der dortigen
-`hiscore.bin` erzeugt (AAA 20000 an der Spitze). Ob das Marquee sie
-zeigt, muss der Besitzer sehen.
-
-Auch `hiscores = no`: Star Wars Enhanced, Red Baron Enhanced, Tempest
-Enhanced (andere Projekte).
-
-## Alle Steuerungen zugleich, Mehrfachbelegung (0.1.13, deployt 2026-10-16, am Automaten nicht ausprobiert)
-
-Wunsch: keine Wahl mehr zwischen einem Joystick, zwei Joysticks und Yoke,
-sondern alle zugleich, damit man umstecken kann; und Feuer (wie in MAME)
-auf mehrere Knöpfe. Jetzt: Die Controls-Seite zeigt alle Belegungen
-(JOYSTICK UP ..., LEFT/RIGHT JOYSTICK UP/DOWN, YOKE FORWARD/RIGHT). Vorrang
-in jedem Bild: Hebel der zwei Joysticks, dann Yoke außerhalb der
-Totzone, dann der eine Joystick (`platform/controls.h`). Jede Aktion hat
-bis zu acht Belegungen (seit 0.1.17; vorher vier), verbunden mit " or "; im Menü kommt eine neue
-dazu, links/rechts setzt auf AUTO zurück (`bz_config_bind_add`). Die
-Einstellung `controls` wird überlesen. Die Pfeiltasten sind nicht mehr
-die Enden des Yokes (sie gehören dem einen Joystick, am Automaten dem
-linken Hebel). Am PC geprüft: Seite passt auf den Schirm, Feuer auf
-"auto or key X or key 5" gelegt und gespeichert; MAME-Vergleich und
-Analog-Prüfung gleich.
-
-Offen: am Automaten mit Hebeln und Yoke ausprobieren. Vorsicht bei sehr
-kleiner Totzone (dort `deadzone = 0.02`): zittert der Yoke in Ruhe über
-die Totzone, gilt er als benutzt, solange kein Hebel gedrückt ist
-(harmlos, solange der Ausschlag klein bleibt).
-
-## Pieptöne lauter, Original wählbar (0.1.12, installiert 2026-10-16, noch nicht gehört)
-
-Rückmeldung zu 0.1.11: Die Original-Pieptöne gehen unter. Mit ENHANCED
-sind die Melodien des POKEY jetzt 11 dB lauter (`docs/SOUNDS.md`). Dazu
-wollte der Besitzer Originalton und Originalfarbe (alles grün, oben rot)
-in den Optionen: Beides gab es (`sound_replace`, Farbe OVERLAY), jetzt
-verständlich benannt und auch auf GAME OPTIONS: SOUNDS ENHANCED/ORIGINAL,
-COLORS FLYER/CLASSIC/ORIGINAL/WHITE. ORIGINAL beim Ton heißt auch: kein
-Ducking, keine lauteren Melodien. Bild: `docs/bilder/farbe-original-und-flyer.png`.
-Installiert, nicht gestartet (auf dem Automaten lief Visual Pinball).
-
-## Motoren leiser, Ducking (0.1.11, deployt 2026-10-16, noch nicht gehört)
-
-Rückmeldung zu 0.1.10: "Sound ist gut, könnte aber etwas leiser. Die
-Radar-Sounds gehen jetzt unter." Die Motorschleifen sind 3 dB leiser, und
-neu ist `enh_ducking` (an): Motoren 5 dB leiser, solange ein Effekt zu
-hören ist (`docs/SOUNDS.md`, Abschnitt Ducking). Am PC: Grundpegel 3,7 dB
-tiefer, Effekte gleich laut, nichts übersteuert.
-
-## Panzermotor mit Ketten, Motoren der Gegner (0.1.10, deployt 2026-10-16, noch nicht gehört)
-
-Rückmeldung zu 0.1.9: Der Motor (aus Battle Zone II) "klingt immer noch
-kacke", gewünscht ein echter Panzer mit Ketten; die Gegnerpanzer sollen
-auch Geräusche machen. Jetzt: drei Schleifen aus Freesound-Aufnahmen
-echter Panzer (CC0): Stand, Fahrt mit Ketten, Gegner. Neu
-`enh_enemy_engine` (an): der Motor des Gegnerpanzers von seiner Seite,
-mit der Entfernung deutlich leiser, hochgedreht solange er fährt
-(`docs/SOUNDS.md`, Abschnitt Motor der Gegner). Am Automaten: 50
-Bilder/s, sieben Sounds geladen. Ob Lautstärke und Klang passen, muss der
-Besitzer hören.
-
-## Mehr Farbe, neue Sounds (0.1.9, deployt 2026-10-16, noch nicht gesehen und gehört)
-
-Wunsch: weniger blaulastig, mehr Farbe in den Objekten, im Schema des
-Flyers (blau, lila, futuristisch), der Boden bleibt blau. Palette "flyer":
-die vier Hindernisformen je ein eigener Ton (Pyramide 0x00 cyan, 0x0c
-blau, Würfel 0x0f violett, 0x01 magenta), beide Bergreihen lila statt
-weißblau, Untertasse kräftiger magenta, eigener Schuss cyanweiß. Bild:
-`docs/bilder/farbe-mehr-lila.png`.
-
-Neue Sounds: Explosion des Gegners und eigener Tod aus
-Freesound-Aufnahmen (CC0), geschichtet. Schuss und Motor auf Wunsch des
-Besitzers aus Battle Zone II, wie es auf dem Automaten liegt ("der ist
-geil"); der Schuss des Gegners ist derselbe, dumpfer und leiser. Der
-Motor blendet zwischen den beiden Schleifen von Battle Zone II nach dem
-Hochdrehen über. Lizenz der Battle-Zone-II-Dateien ungeklärt: nur für den
-eigenen Automaten. `tools/mkfreesound.py assets/freesound --bzoneii
-assets/bzoneii`, Liste in `docs/SOUNDS.md`. `sound_replace` ist jetzt in der Vorgabe an; in der
-gespeicherten Einstellung des Automaten stand 0, dort auf 1 gesetzt. Das
-alte errechnete Paket (auch Motor und Rakete) gehört nicht mehr dazu.
-
-Die Explosion des getroffenen Gegners wird mit der Entfernung leiser,
-aber weniger als seine anderen Geräusche: 1,1 − Abstand/60000, mindestens
-0,55 (`enemy_boom` in `sound.c`; vorher dieselbe Kurve wie sein Schuss,
-bis 0,3). Nur mit `enh_distance`.
-
-Am Automaten: läuft mit 50 Bildern/s, lädt die sechs Sounds. Ob Schuss und
-Explosion so gefallen, und ob Texte und GAME OVER (0.1.8) jetzt ruhig
-stehen, muss der Besitzer sehen und hören.
-
-## Texte und Anzeigen zuerst (0.1.8, am Automaten noch nicht gesehen)
-
-Gemeldet mit 0.1.7: Der Bereich oben rechts (Punktestand, Leben) und GAME
-OVER wackeln noch. Vermutete Ursache: In der Reihenfolge des Spiels kommen
-diese Texte nach der Welt; der Strahl erreicht sie vom Ende der letzten,
-sich bewegenden Linie, jedes Bild von woanders, und auf der Röhre landen
-sie dadurch leicht verschieden. Jetzt werden Texte, Punktestand, Leben,
-Radarring und Visier zuerst gezeichnet, dann Radarstrahl und Blip, dann
-die Welt, jeder Teil in der Reihenfolge des Spiels (`bz_order_steady`,
-`sm.order = 2`). So wird der Text in jedem Bild auf demselben Weg
-erreicht. Gebaut, nicht deployt: der Automat war aus. Nächster Schritt:
-`sh tools/deploy.sh`, dann am Automaten prüfen. Falls es weiter wackelt:
-zwischen Texten und Welt einen festen Halt einfügen (CNTR, also den
-Strahl in die Mitte), oder die Slew- und Jump-Rate der Platine prüfen.
-
-## Fester, kürzerer Strahlweg für die Zusätze (0.1.7)
-
-Die Linien des Spiels bleiben in ihrer Reihenfolge (die Sortierung bleibt
-aus, siehe 0.1.6). Nur die Zusätze werden so erzeugt, dass der Strahl
-kurze Wege hat und die Reihenfolge in jedem Bild dieselbe ist: Gitterlinien
-von nah nach fern und jede zweite zurück, Sterne von links nach rechts und
-zuletzt, das Gitter vor den übrigen Zusätzen. In `bzshot` fällt der dunkle
-Weg damit von 10.800 auf 6.300 Einheiten je Bild (Bildschirmeinheiten).
-Sollte die Sortierung je wieder eingeschaltet werden, behalten Texte,
-Punktestand, Leben, Radar und Visier ihre Reihenfolge und Richtung
-(`movable` in `bz_order_lines`): Das war das Flackern rechts oben.
-
-Die zwischenzeitlich gemessenen 27 bis 37 Bilder pro Sekunde kamen nicht
-vom Port: `deploy.sh` hatte ihn gestartet, während ein anderes Spiel die
-Platine hielt, und der Besitzer hatte Slew- und Jump-Rate der Platine
-verstellt. `deploy.sh` startet jetzt nicht mehr, wenn ein anderes Programm
-die Platine hat, und installiert nur. Sauber gestartet am Automaten: 50
-Bilder pro Sekunde, die Platine braucht 0,8 bis 1,0 ms je Bild, dunkler Weg
-54.000 bis 62.000 Einheiten (0.1.4: 89.000 bis 100.000), kein Bild wartet. Ton: das Protokoll zählt jetzt fehlende
-und verworfene Samples und den lautesten Wert ("sound: ..." in jeder
-pace-Zeile).
-
-## Sortierung wieder aus (0.1.6)
-
-Am Automaten gemeldet: mit 0.1.5 wobbelte das Bild, vorher waren die
-Vektoren ruhig. Die Sortierung nach dem nächsten Strich (`bz_order_lines`)
-ändert die Reihenfolge von Bild zu Bild, sobald sich etwas bewegt; der
-Strahl kommt dann jedes Mal anders an eine Linie heran. `sm.order` steht in
-`src/main.c` wieder auf 0, die Funktion bleibt im Code. Der dunkle Weg ist
-damit wieder so lang wie vor 0.1.5.
-
-## Kürzerer Strahlweg (0.1.5)
-
-Im Protokoll des Automaten fielen Bilder auf, für die die Platine bis zu
-24 ms brauchte, mehr als die 20 ms eines Bildes bei 50 Hz: Solche Bilder
-kommen zu spät, das ist echtes Stocken. Ursache war der dunkle Weg des
-Strahls zwischen den Linien (90.000 bis 120.000 Einheiten, mehr als die
-gezeichneten Linien). `bz_order_lines` (render/smooth.c) ordnet die
-Linien jetzt so, dass der Strahl von einem Strich zum nächstgelegenen
-springt, Striche auch rückwärts, Sterne zuletzt. Am Automaten gemessen:
-dunkler Weg 26.000 bis 36.000 Einheiten, die Platine braucht höchstens
-1,3 ms je Bild. Die Bewegung misst sich unverändert.
-
-## Ton gegen MAME abgeglichen (0.1.4)
-
-Das Soundmodell ist jetzt mit MAME verglichen: dieselben Schreibzugriffe
-auf die Soundhardware in beiden, Sound für Sound ausgewertet
-(`tools/soundcheck.sh`, Ergebnis in docs/SOUNDS.md). Motor, Explosionen,
-POKEY-Melodien und Raketensummen liegen innerhalb von gut 1 dB an MAME,
-auch im Spektrum. Behoben: Der POKEY-Ausgang war linear statt über das
-Widerstandsnetz des Chips gerechnet, die Melodien klangen dadurch dumpf
-und das Raketensummen war 7 dB zu leise. Bewusst anders als MAME: die
-Lautstärke des Schusses nach Bit D3 (`LOUDSH` des Originalprogramms).
-Das ganze Modell ist 6 dB lauter als vorher. Am Automaten noch ungehört.
-
-## Zwischenbilder wie in Star Wars (0.1.3)
-
-Auf Wunsch des Besitzers umgestellt: Statt die fertigen Linien eines
-Frames zum nächsten zu verschieben, wird der Spielzustand zwischen zwei
-Frames eingesetzt (Spieler, Gegner, Schüsse, Untertasse, Trümmer,
-Vulkansteine, Radarstrahl, Logo), und die Zeichenroutinen des Spiels
-zeichnen dieses Bild auf einer Kopie neu (`compute` in `render/smooth.c`).
-
-Dafür nötig, weil das Spiel die Sicht nur mit 9 Bit Winkel dreht und die
-Objekte mit 8: Auf der Kopie nehmen ROTATE und PNTPUT Sinus und Kosinus
-aus allen 16 Bit (`bz_machine.fine`), die Berge bekommen den Rest ihres
-Wegs nachgereicht (`mount_shift`), und die 8-Bit-Winkel von Antenne,
-Untertasse und Trümmern tragen ihre Nachkommastelle mit.
-
-Gemessen (`bzshot --hz 50`, Zeile "single lines": wie stark sich der
-Schritt einer Linie von Bild zu Bild ändert, in Prozent eines Schritts):
-
-| | Fahren und Drehen | Spiel mit Abschüssen |
+| C routines, frame by frame (`bzcompare`) | 70,120 frames | all the same |
+| the original program on the 6502 core (`bzcompare --emu`) | 70,120 frames | all the same |
+| the interrupt routine in C against the original on the core (`bznmi`) | 1,124,000 interrupts, with coins, slam, game starts | all the same |
+| the power-on state in C against the original (`bznmi`) | RAM, vector RAM, POKEY registers | the same |
+| `test_core` (no ROMs) | 6502 core, math box, vector generator, macros, high score file | passed |
+| the picture drawn ahead against the game's next one (`bzshot`) | 448 frames turning and driving | 0.23 units apart per line on average, 0.14 % without a partner |
+| evenness while turning on 60 Hz (`bzshot`) | 1,325 pictures | smoothed 1.6 % standing still and 1.2 % jumps; unsmoothed 74.5 % and 25.5 % |
+| the analog mode at its ends against the lever switches (`tools/checkanalog.sh`) | all eight motions | the same place and direction |
+| occlusion and the ground grid in pictures (`bzshot`, `docs/images`) | pyramids, boxes, tanks near and far, with `--nosolid` to compare | back faces, mountains and grid behind objects are gone, front edges stay |
+| sound replacement with test tones (`bzshot --sounds`) | 60 s of play, 8 sounds replaced | radar beep 38 times, shot 5, explosions 3, warning 4, bump 3 |
+| the sound model against MAME (`tools/soundcheck.sh`) | 75 s, every sound | within about 1 dB, the shot's volume bit deliberately different (docs/SOUNDS.md) |
+| the cabinet's pace (`bzshot --pace`) against MAME | 150 s attract, 150 s play | 14.62 against 14.69, and 14.77 against 14.8 to 15.0 frames a second |
+| stereo (`bzshot --wav`) | 60 s of play | two channels, left and right differ in 13 % of the samples |
+| stars and moon turning together (`bzshot --every`) | consecutive pictures while turning | both 1.99 units a picture |
+| the SDK's stream (`vp_stream_play`, a test tone) | 0.6 s | the tone arrives in the mix at its level (`vp_audio_recent`) |
+| window and test menu by key script and screenshot | pages, binding a key, NONE, high scores reset and loaded | works |
+
+After every frame every byte of RAM and vector RAM and every register of
+the math box is compared. Every random number and every read of the
+switches must also come at the same place.
+
+Coverage of the C routines by the captures (`tools/coverage.sh`):
+`play.c` 99.8 %, `view.c` 99.7 %, `mainline.c` 98.3 %, `nmi.c` 100 %,
+`sound.c` 100 %, `coin.c` 98.7 %, `vgut.c` 90.5 %. Not run through are only
+`bz_main_poll` (the wait loop of live play), the unused drawing command
+`D.SLIM` and three routines of VGUT that Battlezone never calls (`VGRTSL`,
+`VGJMPL`, `VGSTA1`).
+
+## Not yet seen or heard
+
+* **0.2.0 on the cabinet.** The SDK update and the sound through the
+  SDK's stream are checked on a PC only (the program starts, the stream
+  plays, nothing runs dry). Whether the menu's MUSIC VOLUME sets the game
+  on the cabinet is not heard yet.
+* **The controls of 0.1.13 and later on the cabinet** with levers and yoke
+  at once, the menu button, start and fire held, the START lamp.
+* **The calibration picture**: it shows; changing size, place and
+  brightness is not checked.
+* **Several rows of 0.1.16 and later in a full fight**: the grid at 24000
+  brought the board close to its limit (see "The beam's way" in
+  RESUME.md); measured in the attract mode only.
+
+## Known differences from the cabinet
+
+* **Pace.** The cabinet computes 14.7 to 15.1 frames a second and slows
+  down in full scenes, because its 6502 needs up to 102,000 cycles for a
+  frame (16 interrupts are 98,304). The C routines need no time: they run
+  at 15.3 frames a second, 1 to 4 % faster and without wavering, unless
+  `enh_tempo` (the cabinet's pace) is on.
+* **Revision.** The behavior is always revision 1 (`bzonea`), also with
+  the ROM set `bzone`. Revision 2 changes the high score page.
+* **Random numbers.** In live play they come from a shift register of
+  their own, not from a cycle-exact POKEY. The sequence differs from MAME,
+  the behavior is the same.
+* **Math box.** Rebuilt at the level of routines as in MAME, not as
+  microcode. It is done at once. The microcode source (MBUCOD.V05) and the
+  PROMs are at hand; a microcode-level rebuild would be possible.
+* **Vector generator.** The time it needs for a picture (the halt flag) is
+  only approximated. The game itself does not ask for it.
+
+## Not ported
+
+* The board's self test (BZSTST.MAC from `RAMTST`: RAM, ROM and math box
+  tests, switch test, diagnostic pictures) and the diagnostic program
+  BZSADG.MAC. They test hardware that is not here. With `--original` they
+  run on the 6502 core (test switch: IN0 bit 4, not yet on a key).
+* The guards against crashes (stack check and sync check in the
+  interrupt, watchdog) have nothing to guard here and are left out.
+* The copy protection check (`TRAP1`, `TRAP2`: a checksum over the
+  copyright text in the display list) is ported and computes as in the
+  original.
+
+## Known limits of the additions
+
+* **Occlusion.** Faces come only from flat rings of up to eight lines. The
+  logo has no such faces and hides nothing. When an object reaches out of
+  the picture and a point of a face is missing, that face hides nothing.
+* **Ground grid.** It does not bob when the tank bumps. It costs the board
+  lit length (at 24000: about 85,000 of the cabinet's units lit a
+  picture).
+* **Sound replacement.** The recordings' level against the board is a
+  guess. With `--original` the eight tunes are not replaced. The game's
+  sound counts as music for the cabinet menu's volumes.
+* **Pictures between frames.** With `smooth = 2` lines are moved straight
+  between two pictures, not projected anew; very near objects while
+  turning fast could look slightly bent. With `--original` there are none:
+  it shows the original's 15 frames, with the overlay instead of color.
+* **Analog with `--original`.** The original program knows only
+  switches; there the yoke counts as a pushed lever past half way.
+* **The cabinet's pace.** A model, not the original running along. It
+  meets MAME's frame rate to about 1 percent.
+* **START lamp** on the cabinet only, because on a PC it would switch the
+  keyboard's NUM lock.
+* **Esc ends the program**, in the menu too. Only while laying out a
+  control does it not.
+* The missile's flame flickers (the game changes its picture every frame)
+  and a shell burst grows in whole steps, also between frames.
+
+## Open points
+
+1. 0.2.0 on the cabinet: does the menu's MUSIC VOLUME set the game's
+   sound; does the stream play without clicks (the log line counts the
+   times it ran dry).
+2. Try the controls of 0.1.13 and later on the cabinet with levers and
+   yoke.
+3. Watch the board's cost in a full fight with the grid at 24000; if
+   pictures come late, set `FAR` in `render/ground.c` back to about 20000.
+4. Colors and sounds further after the owner's word.
+5. Tidy up: `_scratch/shots/a` and `_scratch/shots/p` hold old test
+   pictures (deleting was refused by the safety check).
+
+## Next steps
+
+See [RESUME.md](RESUME.md), "Next steps".
+
+## Releases
+
+* GitHub: https://github.com/Endprodukt/BattlezoneEnhanced/releases
+  (`v0.1.21`, 2026-10-19; `v0.2.0`). With every new package also a
+  release (`gh release create v<version> build/bzenhanced-<version>.vpk`).
+* The shared Google Drive folder "games": 0.1.20 and 0.1.21.
+
+## History
+
+Newest first.
+
+### 0.2.0 (2026-11-10): the new SDK, the menu's volume, English
+
+The VectorPie SDK brought from 0.1 to 0.9.0 (41 commits; it builds
+without a change). Its new audio options: the cabinet menu's MUSIC VOLUME
+and SOUND VOLUME apply to every game that plays through `vp_audio`. The
+port had an SDL audio device of its own, which they did not reach. Now
+the sound goes out as the SDK's stream of a game's own samples
+(`vp_stream_play`, `platform/audio.c`, as Tempest Enhanced does it): once
+a picture the new samples, about a tenth of a second ahead. The SDK counts
+such a stream as music, so the menu's MUSIC VOLUME sets it, on top of the
+game's own `volume`. The log line counts the times the stream ran dry.
+Checked on a PC: it builds, starts, the stream plays without running dry,
+a test tone arrives in the mix at its level. All documentation in English
+(README, BUILD, STATUS, RESUME, docs/SOUNDS.md; the pictures in
+`docs/images` with English names).
+
+### 0.1.21 (2026-10-19): binding as in every vector game
+
+* Menu (`src/platform/menu.c`): START/Enter on a row, then a control; the
+  first since the cursor came to the row replaces the binding, every
+  further one adds (" or "). While waiting: Esc/Enter (for game functions
+  also START) back without a change, START 2 NONE (game functions only),
+  Delete (also the keypad's) AUTO. Left/right AUTO/NONE (the menu's row
+  never NONE). Shown with real names ("LEFT CTRL + JOY1 BUTTON 1"); one key
+  may have several actions.
+* The menu goes only by fixed controls (`bz_nav` through
+  `src/platform/vpbind.[ch]`, a copy from the Tempest 2000 port): arrows,
+  every stick, hat and yoke, START, Enter, keypad Enter. Bindings and the
+  ways to drive do not act in the menu.
+* AUTO read directly (`AUTO_SPEC` in controls.c: arrows or the first
+  stick, E/D/I/K for the levers, left Ctrl + stick button 1 + the left
+  mouse button for fire, 1, 5); the yoke's AUTO: the device with "yoke" in
+  its name, else joystick 1, directly with the dead zone. New: mouse
+  buttons as a binding. Never laid out: Tab, F2, Esc, Enter, keypad Enter,
+  Delete; for game functions also START and COIN.
+* Checked on a PC (replace, add, NONE); installed on the cabinet (the old
+  file `battlezone.before-vpbind`), not tried there.
+* GitHub release `v0.1.21` with the same package as in the Drive folder.
+
+### Package 0.1.20 in the Drive (2026-10-17)
+
+`tools/make_vpk.sh` (after Red Baron Enhanced's) makes
+`build/bzenhanced-0.1.20.vpk` (4.5 MB: the Pi program, game.ini,
+battlezone.ini, marquee, nine sounds, `sounds/CREDITS.txt`; no ROMs; the
+program and the folders 755, the rest 644). Uploaded to the shared Google
+Drive folder "games" (next to rbenhanced, swenhanced). As the owner
+wished, with Battle Zone II's shot, though its license is not known and
+the folder is public (noted in CREDITS.txt).
+
+### 0.1.20 (2026-10-17): colors only under PICTURE, the credit
+
+COLORS is no longer also on GAME OPTIONS, only under PICTURE (SOUNDS stays
+on both). Under the attract mode's "(C)(P) ATARI 1980" it says "ENHANCED
+BY ENDPRODUKT", in the same color, a little smaller (`main.c`, after
+`bz_draw_lines`). Picture: `docs/images/credits-endprodukt.png`.
+
+### 0.1.19 (2026-10-16): no haze, a grid without steps, stars with the moon
+
+The distance haze (`enh_haze`) is gone altogether, as the owner wished;
+the setting is read over.
+
+The grid "lives in front of my nose": it was dimmed in eight fixed bands
+whose borders lie at fixed distances from the tank. A line across the
+view, coming nearer while driving, got a step brighter at every border.
+Now every stretch has the brightness of its own middle (`lit_at` in
+`render/ground.c`), without steps. (Checked and ruled out: the cut at 700
+units lies below the picture's bottom edge.)
+
+Stars: they turned with a true view (0.049 units an angle step), the
+game's moon and mountains with 0.031; the stars passed the moon 57 %
+faster. Everything infinitely far must turn together: the stars now turn
+with the moon (`MOUNT_RATE`), measured 1.99 units a picture for both. 100
+stars instead of 150, as many to see. The far mountain row stays half as
+fast on purpose (parallax, 0.1.16).
+
+### 0.1.18 (2026-10-16): a binding may be NONE
+
+Left/right on a binding's row: bindings of your own back to AUTO, AUTO to
+NONE, NONE to AUTO again. A new key replaces NONE. Checked on a PC.
+
+### 0.1.17 (2026-10-16): up to eight bindings
+
+Reported: "left Alt is not taken as a key." Fire had four bindings on the
+cabinet already (auto, left Shift, Space, left Ctrl), the limit was four,
+and a new one replaced the last. The cabinet's advmame.rc puts Battlezone's
+fire on four keys (Shift, Space, Ctrl, Alt). Now up to eight
+(`BZ_BIND_ALTS`, `BZ_BIND_SIZE` 320).
+
+### 0.1.16 (2026-10-16): the grid further, the far row with parallax
+
+The ground grid to 24000 instead of 15000 units (`FAR` in
+`render/ground.c`); 30000 cost half again the lit length and looked hardly
+different. On the cabinet (attract mode): about 85,000 lit units a picture
+instead of about 70,000, with the dark way up to about 169,000 at the
+peak, 50.0 pictures a second, no picture stood still. The old limit: it
+stuttered around 170,000; watch it in a full fight, else `FAR` back to
+about 20000.
+
+Parallax: the far row moved 0.029 screen units an angle step, all but as
+fast as the game's own row (0.031: 0.996 every 32 steps), so no parallax
+was seen. Now half as fast as the first row (`PARALLAX` in
+`render/enhance.c`), with fewer corners (52 instead of 96) so the skyline
+stays as wide.
+
+### A new marquee (2026-10-16)
+
+From the owner: the "Battlezone Enhanced" marquee (the flyer's picture
+with ENHANCED), 2000 x 491, as `package/marquee.png` (before 1920 x 360).
+The SDK fits it (`vector_aux_marquee_display_mode` in advmame.rc).
+
+### 0.1.15 (2026-10-16): a new sound against obstacles
+
+Running into obstacles still sounded original: two POKEY tunes, BOING at
+the bump and BLKSND while the tank is stuck (the interrupt starts it again
+when the board's tune ends after 34 interrupts, so the replacement runs at
+the board's pace, and BOING is cut after 0.47 s while the player pushes
+on). Now BOING is a heavy metal crash and BLKSND 0.138 s of grinding with
+a small clank that, repeated, rattles like slipping tracks
+(`tools/mkfreesound.py`, `obstacles`).
+
+### 0.1.14 (2026-10-16): high scores in the menu and on the marquee
+
+The marquee showed high scores for Vectortron, not for this game: `hiscores
+= no` in `game.ini`, and the table was only in `save/hiscore.bin`. The
+cabinet's menu reads `save/highscores.txt` (`NAME POINTS`, up to ten rows,
+vp_hiscore.h). Now the game writes it when it starts, at every new entry
+and when the table is reset (`bz_hiscore_save_text`), and `game.ini` says
+`hiscores = yes`. Checked on a PC (the power-on table EDR, MPH, JED ...
+5000 each).
+
+### 0.1.13 (2026-10-16): every way to drive at once, several bindings
+
+The owner wanted no choice between one joystick, two joysticks and a yoke,
+but all at once, to plug in whatever is at hand, and fire on several
+buttons as in MAME. The controls page shows every binding; in every
+picture the levers of the two joysticks come first, then the yoke out of
+its dead zone, then the one joystick (`platform/controls.h`). The setting
+`controls` is read over. The arrow keys are no longer the yoke's ends.
+Checked on a PC; the MAME comparison and the analog check the same. Mind a
+very small dead zone (the cabinet has `deadzone = 0.02`): a yoke trembling
+at rest past it counts as used while no lever is held.
+
+### 0.1.12 (2026-10-16): louder beeps, the original selectable
+
+The original beeps were lost: with ENHANCED the POKEY's tunes are now
+11 dB louder. The owner wanted the original sound and the original color
+(all green, the top red) in the options: both were there
+(`sound_replace`, the color OVERLAY), now named plainly and also on GAME
+OPTIONS: SOUNDS ENHANCED/ORIGINAL, COLORS FLYER/CLASSIC/ORIGINAL/WHITE.
+ORIGINAL for the sound also means no ducking and no louder tunes.
+
+### 0.1.11 (2026-10-16): quieter engines, ducking
+
+"The sound is good, but could be a bit quieter. The radar sounds are lost
+now." The engine loops are 3 dB quieter, and `enh_ducking` (on) is new:
+the engines 5 dB softer while an effect is heard.
+
+### 0.1.10 (2026-10-16): a tank engine with tracks, the enemies' engines
+
+The engine (from Battle Zone II) did not sound like a tank; a real tank
+with tracks was wanted, and the enemy tanks should make noise too. Now
+three loops from Freesound recordings of real tanks (CC0): standing,
+driving with tracks, the enemy. New `enh_enemy_engine` (on): the enemy
+tank's engine from his side, clearly quieter far away, revved while he
+drives.
+
+### 0.1.9 (2026-10-16): more color, new sounds
+
+Less blue, more color in the objects, in the flyer's scheme (blue,
+purple, futuristic), the ground stays blue: the four obstacle shapes each
+a shade of their own (pyramid 0x00 cyan, 0x0c blue, cube 0x0f violet,
+0x01 magenta), both mountain rows lilac instead of white-blue, the saucer
+a stronger magenta, the player's shot cyan-white. Picture:
+`docs/images/color-more-purple.png`.
+
+New sounds: the enemy's explosion and the player's death from Freesound
+recordings (CC0), layered. The shot and (until 0.1.10) the engine from
+Battle Zone II as it is on the cabinet, as the owner wished; the enemy's
+shot is the same, duller and softer. `sound_replace` on by default. The
+old computed pack (engine and missile too) is no longer part of it.
+
+The hit enemy's explosion is quieter far away, but less than his other
+sounds: 1.1 - distance / 60000, at least 0.55 (`enemy_boom` in
+`sound.c`; before the same curve as his shot, down to 0.3). Only with
+`enh_distance`.
+
+### 0.1.8: texts and gauges first
+
+Reported with 0.1.7: the top right (score, tanks left) and GAME OVER still
+wobble. In the game's order these texts come after the world; the beam
+reached them from the end of the last moving line, from somewhere else
+every picture, and on the tube they landed slightly differently. Now
+texts, score, tanks left, the radar's ring and the sights are drawn first,
+then the radar's sweep and blip, then the world, each part in the game's
+order (`bz_order_steady`, `sm.order = 2`).
+
+### 0.1.7: a fixed, shorter beam way for the additions
+
+The game's lines keep their order (the sorting stays off, see 0.1.6).
+Only the additions are made so the beam has short ways and the order is
+the same every picture: grid lines from near to far and every other one
+back, stars from left to right and last, the grid before the other
+additions. In `bzshot` the dark way fell from 10,800 to 6,300 screen units
+a picture. The frame rates of 27 to 37 measured meanwhile did not come
+from the port: `deploy.sh` had started it while another game held the
+board, and the owner had changed the board's slew and jump rates.
+`deploy.sh` no longer starts the game when another program has the board;
+it only installs. Started cleanly on the cabinet: 50 pictures a second,
+0.8 to 1.0 ms of board time a picture, a dark way of 54,000 to 62,000
+units (0.1.4: 89,000 to 100,000), no picture waits. The log counts the
+sound's trouble and the loudest value.
+
+### 0.1.6: sorting off again
+
+With 0.1.5 the picture wobbled on the cabinet; before, the vectors were
+steady. Sorting by the nearest stroke (`bz_order_lines`) changes the order
+from picture to picture as soon as something moves, and the beam comes to
+a line differently every time. `sm.order` was set back to 0; the function
+stays in the code.
+
+### 0.1.5: a shorter beam way
+
+The cabinet's log showed pictures for which the board needed up to 24 ms,
+more than the 20 ms of a picture at 50 Hz: such pictures come late, a real
+stutter. The cause was the beam's dark way between lines (90,000 to
+120,000 units, more than the lit lines). `bz_order_lines`
+(render/smooth.c) orders the lines so the beam jumps to the nearest
+stroke, strokes backwards too, stars last. Measured on the cabinet: a dark
+way of 26,000 to 36,000 units, at most 1.3 ms a picture.
+
+### 0.1.4: the sound matched to MAME
+
+The sound model compared with MAME: the same writes to the sound hardware
+in both, sound by sound (`tools/soundcheck.sh`, results in
+docs/SOUNDS.md). Engine, explosions, POKEY tunes and the missile's buzz
+are within about 1 dB of MAME, the spectrum too. Fixed: the POKEY's output
+was computed linearly instead of through the chip's resistor network; the
+tunes sounded dull and the missile's buzz was 7 dB too quiet. Deliberately
+not as MAME: the shot's volume by bit D3 (the original program's
+`LOUDSH`). The whole model is 6 dB louder than before.
+
+### 0.1.3: pictures between frames as in Star Wars
+
+As the owner wished: instead of moving a frame's finished lines to the
+next, the game's state between two frames is set (player, enemy, shells,
+saucer, wreck, volcano rocks, radar sweep, logo), and the game's drawing
+routines draw that picture on a copy (`compute` in `render/smooth.c`).
+Needed because the game turns the view with a 9-bit angle and the objects
+with 8: on the copy ROTATE and PNTPUT take sine and cosine from all 16
+bits (`bz_machine.fine`), the mountains get the rest of their way
+(`mount_shift`), and the 8-bit angles of antenna, saucer and wreck carry
+their fraction.
+
+Measured (`bzshot --hz 50`, "single lines": how much a line's step
+changes from picture to picture, in percent of a step):
+
+| | driving and turning | play with hits |
 |---|---|---|
-| berechnet (neu, `smooth = 1`) | 5,2 | 17,0 |
-| Linien verschoben (`smooth = 2`) | 3,3 | 15,1 |
-| ohne Zwischenbilder | 198,7 | |
+| computed (`smooth = 1`) | 5.2 | 17.0 |
+| lines moved (`smooth = 2`) | 3.3 | 15.1 |
+| no pictures between | 198.7 | |
 
-Beide Verfahren sind also gleichmäßig; das berechnete hat die richtige
-Perspektive und lässt Objekte dort ins Bild kommen, wo sie sind. Die
-ersten Fassungen waren es nicht: Die feinen Winkel landeten im Speicher
-statt in der Math Box, und Trümmer, Antenne, Raketenhöhe und Einschläge
-sprangen einmal pro Frame. Erst die Messung je Objektart hat das gezeigt.
+Both ways are even; the computed one has the right perspective and lets
+objects come into the picture where they are. The first versions were
+not: the fine angles landed in memory instead of the math box, and wreck,
+antenna, the missile's height and shell bursts jumped once a frame. Only
+measuring per kind of object showed it.
 
-Offen: Die Flamme der Rakete flackert (das Spiel wechselt ihr Bild jeden
-Frame), ein Einschlag wächst in ganzen Stufen. Am Automaten ungesehen.
+### 0.1.2: the cabinet's second feedback
 
-## Zweite Rückmeldung vom Automaten (0.1.2)
+* **Stepped motion.** The board draws its last picture again and again at
+  its own rate (the cabinet's menu: DVG REFRESH, 30 to 60 Hz, default 40).
+  The port sent 45 pictures a second; when that does not match the board's
+  rate, pictures are shown twice and skipped in turn, which looks like
+  stuttering. Star Wars sends 50 and runs smoothly. Now `board_hz`, default
+  50; it must equal DVG REFRESH.
+* **The grid built in front of the nose.** Up to 5000 units ahead it is
+  fully bright without steps; only beyond that it comes out of the dark,
+  up at the horizon (see 0.1.19 for the steps).
+* **Removed with their options:** the finer grid, track marks, radar dots,
+  the arrow. Old keys in `battlezone.ini` are read over without a word.
+* **Stars** higher, behind the moon and the skyline, twinkling.
+* **A second mountain row** with parallax, only over the first row's
+  skyline. One volcano, in front.
+* **Explosion:** the wreck in the color of the destroyed vehicle, with
+  sparks in the same color (`enh_particles`); the saucer sparks violet.
+* **Entering initials with the yoke** works (the lever switches come
+  along past half way in the analog mode). The instructions' line is
+  replaced per way of driving (English, color modes).
 
-Umgesetzt:
+### 0.1.1: reported on the cabinet and fixed
 
-* **Bewegung stufenhaft.** Die Platine zeichnet ihr letztes Bild mit
-  ihrer eigenen Bildrate immer wieder (Menü des Automaten: DVG REFRESH,
-  30 bis 60 Hz, Vorgabe 40). Der Port sendete 45 Bilder pro Sekunde:
-  Passt das nicht zur Rate der Platine, werden Bilder abwechselnd doppelt
-  gezeigt und übersprungen, das sieht aus wie Stocken. Star Wars sendet
-  50 und läuft glatt. Jetzt `board_hz`, Vorgabe 50; muss gleich DVG
-  REFRESH sein. Am Automaten noch nicht bestätigt (er war aus).
-* **Gitter baut sich vor der Nase auf.** Bis 5000 Einheiten voraus ist
-  es ohne Stufen voll hell, erst dahinter kommt es in acht Stufen aus dem
-  Dunkel, oben am Horizont, wo eine Stufe kaum Bildfläche hat.
-* **Entfernt samt Option:** feineres Gitter, Kettenspuren, Radarpunkte,
-  Pfeil. Alte Schlüssel in `battlezone.ini` werden stillschweigend
-  überlesen.
-* **Sterne** höher, hinter Mond und Bergsilhouette, funkelnd.
-* **Zweite Bergreihe** mit Parallaxe (0,6-fache Drehrate), nur über der
-  Silhouette der ersten Reihe. Ein Vulkan, vorn.
-* **Explosion:** Trümmer in der Farbe des zerstörten Fahrzeugs, dazu
-  Funken in derselben Farbe (`enh_particles`); die Untertasse funkt
-  violett.
-* **Highscore-Eingabe mit Yoke** geht (die Hebelschalter werden im
-  Analogmodus ab halbem Weg mitgeliefert). Die Anleitungszeile wird je
-  Eingabeart ersetzt (Englisch, Farbmodi). Die Ersetzung ist nur im Code
-  geprüft, nicht im Bild: Das Testskript kommt nicht bis zur Eingabe.
-
-Geprüft: `bzshot` mit der neuen Zielautomatik (`aim`) erreicht 26.000
-Punkte, die Funken und Trümmer sind grün (Panzer). Vergleich gegen MAME
-weiter gleich.
-
-## Belegung wie bei allen Vektorspielen (2026-10-19)
-
-- Menü (`src/platform/menu.c`): START/Enter auf einer Zeile, dann ein Knopf; der erste seit der Cursor auf der Zeile steht ersetzt die Belegung, jeder weitere START fügt hinzu (" or "). Während des Wartens: Esc/Enter (bei Spielfunktionen auch START) = zurück ohne Änderung, START 2 = NONE (nur Spielfunktionen), Entf (auch Keypad) = AUTO. Links/Rechts = AUTO/NONE (Menü-Zeile nie NONE). Anzeige mit echten Namen ("LEFT CTRL + JOY1 BUTTON 1"), eine Taste darf mehrere Aktionen haben.
-- Das Menü geht nur über feste Eingaben (`bz_nav` über `src/platform/vpbind.[ch]`, Kopie aus dem Tempest-2000-Port): Pfeile, jeder Stick/Hat/Steuerhorn, START/Enter/Keypad-Enter. Belegungen und die Fahrweisen wirken im Menü nicht mehr.
-- AUTO direkt gelesen (`AUTO_SPEC` in controls.c: Pfeile/erster Stick, E/D/I/K für die Hebel, Left Ctrl + Stick-Knopf 1 + linke Maustaste fürs Feuer, 1, 5); Steuerhorn-AUTO: das Gerät mit "yoke" im Namen, sonst Joystick 1, direkt mit Totzone. Neu: Maustasten als Belegung. Beim Belegen nie: Tab, F2, Esc, Enter, Keypad-Enter, Entf; bei Spielfunktionen auch START/COIN.
-- Am PC geprüft (ersetzen, hinzufügen, NONE), Pi-Build am Automaten installiert (alte Datei `battlezone.before-vpbind`), dort nicht ausprobiert.
-
-GitHub-Release (2026-10-19): `v0.1.21` mit demselben Paket wie im Google-Drive-Ordner `games`. Bei jedem neuen Paket im Drive auch ein Release anlegen (`gh release create v<version> <paket>.vpk`).
+* **The game picture narrower than the calibration picture.** The part
+  shown was MAME's (580 by 400 units, with a black border around the
+  game). Now it is the game's own window, 512 by 384, exactly 4:3.
+* **Jerky motion, objects stopping briefly and moving on.** The cause was
+  not the schedule but the game: it rounds every object point's picture
+  position to a grid of half a unit, so a far object stands still for
+  several frames and then jumps. Now the points are taken unrounded, from
+  what the math box divides (`bz_avg_exact`), and every picture starts
+  exactly a period after the one before.
+* **The ground builds up in front of you.** The grid had five brightness
+  steps, and the finer lines appeared suddenly half way. Now all lines
+  come out of the dark and get brighter towards the player.

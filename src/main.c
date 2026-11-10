@@ -334,7 +334,7 @@ int main(int argc, char **argv)
                 uint32_t dry = 0, dropped = 0;
                 if (have_sound) bz_audio_trouble(&dry, &dropped);
                 printf("battlezone pace: pictures %.1f to %.1f ms apart, %u game frames, %u of %u pictures stood still, "
-                       "period %.1f ms; sound: %u samples short, %u dropped, peak %.0f %%\n", lo * 1000.0, hi * 1000.0,
+                       "period %.1f ms; sound: %u times dry, %u dropped, peak %.0f %%\n", lo * 1000.0, hi * 1000.0,
                        (unsigned)(m.frames - frames0), (unsigned)(sm.held_count - held0),
                        (unsigned)(sm.shown_count - shown0), sm.period * 1000.0, (unsigned)dry, (unsigned)dropped,
                        100.0 * snd.peak);
